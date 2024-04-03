@@ -1,4 +1,4 @@
-# HỆ THỐNG CÂN ĐIỆN TỬ ( DI ĐỘNG + WEBSEVER )
+# HỆ THỐNG CÂN ĐIỆN TỬ ( DI ĐỘNG + WEBSERVER )
 =======================================================================
 # Di động (hệ điều hành Android)
 - Xem số liệu cân trên di động
