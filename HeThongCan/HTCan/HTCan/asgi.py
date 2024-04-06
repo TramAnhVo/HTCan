@@ -1,5 +1,5 @@
 """
-ASGI config for HTCanDienTu project.
+ASGI config for HTCan project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'HTCanDienTu.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'HTCan.settings')
 
 application = get_asgi_application()

@@ -10,14 +10,16 @@ admin_site = CanDienTuAdmin(name='myapp')
 
 
 class PhieuCanAdmin(admin.ModelAdmin):
-    list_display = ['MaPhieu', 'TrongLuongTong', 'TrongLuongBi', 'TrongLuongHang', 'NgayTao', 'TenCan', 'TrangThai']
+    list_display = ['MaPhieu', 'TLTong', 'TLBi', 'TLHang', 'NgayTao', 'TrangThai']
     list_filter = ['NgayTao']
     search_fields = ['MaPhieu']
 
+
 class Can(admin.ModelAdmin):
-    list_display = ['TenCan']
-    search_fields = ['TenCan']
+    pass
+    # list_display = ['TenCan']
+    # search_fields = ['TenCan']
 
 
 admin_site.register(PhieuCan, PhieuCanAdmin)
-admin_site.register(ThongTinCan,Can)
+admin_site.register(ThongTinCan)

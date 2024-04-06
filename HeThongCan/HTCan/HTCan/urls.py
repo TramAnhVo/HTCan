@@ -1,5 +1,5 @@
 """
-URL configuration for HTCanDienTu project.
+URL configuration for HTCan project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.0/topics/http/urls/
@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, re_path, include
-from CanDienTu.admin import admin_site
+from CanApp.admin import admin_site
 
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
@@ -35,11 +35,11 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path('', include('CanDienTu.urls')),
+    path('', include('CanApp.urls')),
     path('admin/', admin_site.urls),
     # path('o/', include('oauth2_provider.urls',
     #                    namespace='oauth2_provider')),
-    re_path(r'^ckeditor/', include('ckeditor_uploader.urls')),
+
     re_path(r'^swagger(?P<format>\.json|\.yaml)$',
             schema_view.without_ui(cache_timeout=0),
             name='schema-json'),

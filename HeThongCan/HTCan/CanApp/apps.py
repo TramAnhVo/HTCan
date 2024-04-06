@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class CandientuConfig(AppConfig):
+class CanappConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'CanDienTu'
+    name = 'CanApp'

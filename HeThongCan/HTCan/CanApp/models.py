@@ -1,10 +1,9 @@
 from django.db import models
-from  django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser
 
 
 class User(AbstractUser):
     phone = models.CharField(max_length=10, null=True)
-    active = models.BooleanField(default=False)
     state = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
@@ -21,19 +20,22 @@ class User(AbstractUser):
 
 
 class ThongTinCan(models.Model):
-    TenCan = models.CharField(max_length=255, null = False)
+    TenCan = models.CharField(max_length=255, null=False)
+    NgayTao = models.DateField(auto_now_add=True, null=True)
+    TrangThai = models.BooleanField(default=True)
 
 
 class PhieuCan(models.Model):
-    MaPhieu = models.CharField(max_length=10, null=False)
-    TrongLuongTong = models.IntegerField(null=False)
-    TrongLuongBi =  models.IntegerField(null=False)
-    TrongLuongHang =  models.IntegerField(null=False)
+    MaPhieu = models.CharField(max_length=255, null=False)
+    TLTong = models.IntegerField(null=False)
+    TLBi = models.IntegerField(null=False)
+    TLHang = models.IntegerField(null=False)
 
     NgayTao = models.DateField(auto_now_add=True, null=True)
     TrangThai = models.BooleanField(default=True)
 
-    TenCan = models.ForeignKey(ThongTinCan,  on_delete=models.CASCADE, null=True)
+    # TenCan = models.ForeignKey(ThongTinCan,  on_delete=models.CASCADE, null=True)
+
     def __str__(self):
         return self.MaPhieu
 
