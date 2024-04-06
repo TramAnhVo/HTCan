@@ -37,7 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'CanDienTu.apps.CandientuConfig'
+    'CanDienTu.apps.CandientuConfig',
+    'drf_yasg',
+    'rest_framework',
 ]
 
 import pymysql

@@ -1,7 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="7cf79d79-d92e-4241-8994-1a9384a6ed39" name="Changes" comment="" />
+    <list default="true" id="7cf79d79-d92e-4241-8994-1a9384a6ed39" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HTCanDienTu/CanDienTu/serializers.py" beforeDir="false" afterPath="$PROJECT_DIR$/HTCanDienTu/CanDienTu/serializers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HTCanDienTu/CanDienTu/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/HTCanDienTu/CanDienTu/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HTCanDienTu/CanDienTu/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/HTCanDienTu/CanDienTu/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HTCanDienTu/HTCanDienTu/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/HTCanDienTu/HTCanDienTu/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HTCanDienTu/HTCanDienTu/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/HTCanDienTu/HTCanDienTu/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/HTCanDienTu/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/HTCanDienTu/requirements.txt" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
