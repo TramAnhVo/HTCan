@@ -27,16 +27,6 @@ class CanView(viewsets.ViewSet,
 
 
 class UserView(viewsets.ViewSet,
-                generics.ListAPIView,
-                generics.CreateAPIView,
-                generics.UpdateAPIView,
-                generics.RetrieveAPIView,
-                generics.DestroyAPIView):
-    queryset = User.objects.all()
-    serializer_class = serializers.CanSerializer
-
-
-class UserView(viewsets.ViewSet,
                generics.ListAPIView,
                generics.CreateAPIView,
                generics.UpdateAPIView):

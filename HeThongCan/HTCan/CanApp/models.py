@@ -1,10 +1,14 @@
+from cloudinary.models import CloudinaryField
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+import cloudinary
 
 
 class User(AbstractUser):
     phone = models.CharField(max_length=10, null=True)
     state = models.BooleanField(default=False)
+    # avatar = CloudinaryField('avatar', null=True, max_length=1000)
+    avatar = models.CharField(null=True, max_length=1000)
 
     def save(self, *args, **kwargs):
         if self.pk:  # Kiểm tra xem đối tượng đã tồn tại trong cơ sở dữ liệu hay chưa
@@ -18,11 +22,23 @@ class User(AbstractUser):
 
         super().save(*args, **kwargs)  # Gọi phương thức lưu trữ của lớp cha
 
+    def save_avatar(self, *args, **kwargs):
+        # Kiểm tra xem có tệp tin hình ảnh mới được tải lên hay không
+        if self.avatar and 'cloudinary.com' not in self.avatar:
+            # Tải lên hình ảnh lên Cloudinary
+            response = cloudinary.uploader.upload(self.avatar)
+            # Lưu đường dẫn hình ảnh trả về từ Cloudinary vào trường avatar
+            self.avatar = response['url']
+        super().save(*args, **kwargs)
+
 
 class ThongTinCan(models.Model):
     TenCan = models.CharField(max_length=255, null=False)
     NgayTao = models.DateField(auto_now_add=True, null=True)
     TrangThai = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.TenCan
 
 
 class PhieuCan(models.Model):
@@ -34,7 +50,7 @@ class PhieuCan(models.Model):
     NgayTao = models.DateField(auto_now_add=True, null=True)
     TrangThai = models.BooleanField(default=True)
 
-    # TenCan = models.ForeignKey(ThongTinCan,  on_delete=models.CASCADE, null=True)
+    TenCan = models.ForeignKey(ThongTinCan, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         return self.MaPhieu

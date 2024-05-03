@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'CanApp.apps.CanappConfig',
     'drf_yasg',
     'rest_framework',
+    'cloudinary',
+    'cloudinary_storage',
 ]
 
 import pymysql
@@ -47,6 +49,14 @@ import pymysql
 pymysql.install_as_MySQLdb()
 
 AUTH_USER_MODEL = 'CanApp.User'
+
+import cloudinary
+cloudinary.config(
+    cloud_name="dfhexl1gh",
+    api_key="195159349819916",
+    api_secret="zAN8Lucg7XQ5Wl8KgBoUQKZcUxs"
+)
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

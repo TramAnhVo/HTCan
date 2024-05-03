@@ -7,6 +7,7 @@ class PhieuCanSerializer(ModelSerializer):
         model = PhieuCan
         fields = '__all__'
 
+
 class CanSerializer(ModelSerializer):
     class Meta:
         model = ThongTinCan
@@ -16,7 +17,7 @@ class CanSerializer(ModelSerializer):
 class UserSerializer(ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "password", "phone"]
+        fields = ["id", "username", "password", "phone", "avatar"]
         extra_kwargs = {
             'password': {
                 'write_only': True
