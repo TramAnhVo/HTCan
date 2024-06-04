@@ -1,0 +1,2 @@
+export const CLIENT_ID = 'QrdlsvDL5jMvJdSRH1OM220VADzY8gk1iHfqQ1Pn';
+export const CLIENT_SECRET = 'jWifBzu4n8amRkyzQixBlHyEqw04rUfAJYaSB3zLXcVToFjfzvX1XFaua7Pu0yyMpZYjqHITxjvqCgPtRZA2L9zSy3Aj7dFjFakmje4JoAtbKlkcjbCx9qDViZ670nLL'

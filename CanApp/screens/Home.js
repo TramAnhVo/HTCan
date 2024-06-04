@@ -1,8 +1,8 @@
-import { FontAwesome, FontAwesome6, MaterialCommunityIcons } from '@expo/vector-icons';
+import { AntDesign, FontAwesome, FontAwesome6, Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import CustomeCarousel from '../components/CustomeCarousel';
 
-export default Home = ({navigation}) => {
+export default Home = ({ navigation }) => {
     const data = [
         {
             image: require('../images/can.png')
@@ -30,21 +30,30 @@ export default Home = ({navigation}) => {
                 <CustomeCarousel data={data} />
             </View>
 
-            <View style={{ margin: 20, flexDirection: 'row', justifyContent: 'space-evenly' }}>
-                <TouchableOpacity style={{ padding: 20, alignItems: 'center' }} onPress={() => navigation.navigate("Scales")}>
-                    <FontAwesome6 name="weight-scale" size={30} color="black" />
-                    <Text style={{ paddingTop: 5, fontSize: 16 }}>Cân</Text>
-                </TouchableOpacity>
+            <View style={{flexDirection: 'row', marginTop: 50, marginLeft: '2%', marginRight: '2%'}}>
+                <View style={{width: '50%'}}>
+                    <TouchableOpacity style={[styles.MenuItemLeft, style={backgroundColor: '#33CCCC'}]} onPress={() => navigation.navigate("Scales")} >
+                        <Text style={{ fontSize: 17, marginRight: 20 }} >Phiếu cân mới</Text>
+                        <FontAwesome6 name="weight-scale" size={30} color="black" />
+                    </TouchableOpacity>
 
-                <TouchableOpacity style={{ padding: 20, alignItems: 'center' }}>
-                <FontAwesome name="bar-chart" size={30} color="black" />
-                    <Text style={{ paddingTop: 5, fontSize: 16 }}>Thống kê</Text>
-                </TouchableOpacity>
+                    <TouchableOpacity style={[styles.MenuItemLeft, style={marginTop: 10, backgroundColor: '#66CC66'}]} onPress={() => navigation.navigate("OldWeight")} >
+                        <Text style={{ fontSize: 17, marginRight: 20 }} >Phiếu cân cũ</Text>
+                        <AntDesign name="carryout" size={30} color="black" />
+                    </TouchableOpacity>
+                </View>
 
-                <TouchableOpacity style={{ padding: 20, alignItems: 'center' }}>
-                    <MaterialCommunityIcons name="account" size={30} color="black" />
-                    <Text style={{ paddingTop: 5, fontSize: 16 }}>Tài khoản</Text>
-                </TouchableOpacity>
+                <View style={{width: '50%'}}>
+                    <TouchableOpacity style={[styles.MenuItemRight, style={backgroundColor: '#33CCCC'}]} onPress={() => navigation.navigate("Chart")}>
+                        <Text style={{ fontSize: 17, marginLeft: 20 }} >Thống kê</Text>
+                        <FontAwesome name="bar-chart" size={30} color="black" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={[styles.MenuItemRight, style={marginTop: 10, backgroundColor: '#66CC66'}]} onPress={() => navigation.navigate("Account")}>
+                        <Text style={{ fontSize: 17, marginLeft: 20 }} >Tài khoản</Text>
+                        <Ionicons name="person-sharp" size={30} color="black" />
+                    </TouchableOpacity>
+                </View>
             </View>
         </View>
     )
@@ -53,5 +62,34 @@ export default Home = ({navigation}) => {
 const styles = StyleSheet.create({
     carouselContainer: {
         marginTop: '20%'
+    },
+
+    MenuItemLeft: {
+        flexDirection: 'row', 
+        backgroundColor: 'lightblue', 
+        alignItems: 'center', 
+        height: 80, 
+        justifyContent:'center', 
+        borderRadius: 20,
+        marginRight: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.8,
+        shadowRadius: 10,
+        elevation: 7,
+    },
+
+    MenuItemRight: {
+        flexDirection: 'row-reverse', 
+        // backgroundColor: 'lightblue', 
+        alignItems: 'center', 
+        height: 80, 
+        justifyContent:'center', 
+        borderRadius: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.8,
+        shadowRadius: 10,
+        elevation: 7,
     }
 });

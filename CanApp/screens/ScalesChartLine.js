@@ -6,7 +6,7 @@ import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, Toucha
 import Api, { endpoints } from '../configs/Api';
 import MyContext from '../configs/MyContext';
 
-export default Scales = ({ navigation }) => {
+export default ScalesChartLine = ({ navigation }) => {
     const [scales, setScales] = useState(null)
     const [refreshing, setRefreshing] = useState(false);
     const [user, dispatch] = useContext(MyContext);
@@ -32,7 +32,7 @@ export default Scales = ({ navigation }) => {
     }, [])
 
     const goToScaleDetail = (scaleId) => {
-        navigation.navigate("Weight", { "scaleId": scaleId })
+        navigation.navigate("ChartLine", { "scaleId": scaleId })
     }
 
     return (

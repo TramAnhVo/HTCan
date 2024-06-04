@@ -9,8 +9,11 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+import os
 from pathlib import Path
+
+import pytz
+from django.utils import timezone
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,8 +28,7 @@ SECRET_KEY = 'django-insecure-pl1boi&6e4bc5+q=3njr_3ej-5u8)0*vpf17=$7nf&a^0us$-h
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Application definition
 
@@ -42,6 +44,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'cloudinary',
     'cloudinary_storage',
+    'oauth2_provider',
+    'admin_interface',
+    'colorfield',
 ]
 
 import pymysql
@@ -49,6 +54,7 @@ import pymysql
 pymysql.install_as_MySQLdb()
 
 AUTH_USER_MODEL = 'CanApp.User'
+ALLOWED_HOSTS = ['*']
 
 import cloudinary
 cloudinary.config(
@@ -56,7 +62,21 @@ cloudinary.config(
     api_key="195159349819916",
     api_secret="zAN8Lucg7XQ5Wl8KgBoUQKZcUxs"
 )
+
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+CLIENT_ID = 'QrdlsvDL5jMvJdSRH1OM220VADzY8gk1iHfqQ1Pn'
+CLIENT_SECRET = 'jWifBzu4n8amRkyzQixBlHyEqw04rUfAJYaSB3zLXcVToFjfzvX1XFaua7Pu0yyMpZYjqHITxjvqCgPtRZA2L9zSy3Aj7dFjFakmje4JoAtbKlkcjbCx9qDViZ670nLL'
+
+OAUTH2_PROVIDER = {
+    'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore'
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+    )
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -73,7 +93,7 @@ ROOT_URLCONF = 'HTCan.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates/')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -132,7 +152,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
