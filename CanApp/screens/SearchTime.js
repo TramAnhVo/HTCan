@@ -21,30 +21,28 @@ export default SearchTime = ({ route }) => {
             {weight === null ? <ActivityIndicator /> : <>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginLeft: 5, marginRight: 5, marginBottom: 10, marginTop: 10 }}>
                     <View style={[styles.ItemTitle, style = { width: '60%' }]}>
-                        <Text style={{ fontWeight: '700', textAlign: 'center', fontSize: 18 }}>Tổng trọng lượng hàng</Text>
-                        <Text style={{ color: 'green', fontSize: 40, textAlign: 'center', fontWeight: '700' }}>{weight.TongHang}</Text>
+                        <Text style={{ fontWeight: '700', textAlign: 'center', fontSize: 17 }}>Tổng trọng lượng hàng</Text>
+                        <Text style={{ color: 'green', fontSize: 35, textAlign: 'center', fontWeight: '700' }}>{weight.TongHang}</Text>
                     </View>
 
                     <View style={[styles.ItemTitle, style = { width: '39%' }]}>
-                        <Text style={{ fontWeight: '700', textAlign: 'center', fontSize: 18 }}>Tổng số phiếu</Text>
-                        <Text style={{ color: 'green', fontSize: 40, textAlign: 'center', fontWeight: '700' }}>{weight.TongSoPhieu}</Text>
+                        <Text style={{ fontWeight: '700', textAlign: 'center', fontSize: 16 }}>Tổng số phiếu</Text>
+                        <Text style={{ color: 'green', fontSize: 35, textAlign: 'center', fontWeight: '700' }}>{weight.TongSoPhieu}</Text>
                     </View>
                 </View>
 
                 {weight.PhieuCan.length === 0 ? (
-                    <Text>Không có phiếu cân</Text>
+                    <Text style={{ textAlign: 'center' }}>Không có phiếu cân</Text>
                 ) : (weight && weight.PhieuCan.map((item, index) => (
                     <View style={styles.ItemWeight} key={index}>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <View style={{ flexDirection: 'row' }}>
-                                <Text style={{ fontSize: 17 }}>Tên cân: </Text>
-                                <Text style={{ fontSize: 17, marginLeft: 5 }}>{item.phieuCan.Can.name}</Text>
-                            </View>
+                        <View style={{ flexDirection: 'row' }}>
+                            <Text style={{ fontSize: 17 }}>Tên cân: </Text>
+                            <Text style={{ fontSize: 17, marginLeft: 5 }}>{item.phieuCan.Can.name}</Text>
+                        </View>
 
-                            <View style={{ flexDirection: 'row' }}>
-                                <Text style={{ fontSize: 17 }}>Mã phiếu: </Text>
-                                <Text style={{ fontSize: 17, marginLeft: 5, fontWeight: '800', color: 'red' }}>{item.phieuCan.MaPhieu}</Text>
-                            </View>
+                        <View style={{ flexDirection: 'row', marginTop: 10 }}>
+                            <Text style={{ fontSize: 17 }}>Mã phiếu: </Text>
+                            <Text style={{ fontSize: 17, marginLeft: 5, fontWeight: '800', color: 'red' }}>{item.phieuCan.MaPhieu}</Text>
                         </View>
 
                         <View style={{ flexDirection: 'row', marginTop: 10 }}>

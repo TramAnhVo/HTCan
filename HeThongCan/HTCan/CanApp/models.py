@@ -21,14 +21,14 @@ class User(AbstractUser):
             self.set_password(self.password)  # Mã hóa mật khẩu mới
         super().save(*args, **kwargs)  # Gọi phương thức lưu trữ của lớp cha
 
-    # def save_avatar(self, *args, **kwargs):
-    #     # Kiểm tra xem có tệp tin hình ảnh mới được tải lên hay không
-    #     if self.avatar and 'cloudinary.com' not in self.avatar:
-    #         # Tải lên hình ảnh lên Cloudinary
-    #         response = cloudinary.uploader.upload(self.avatar)
-    #         # Lưu đường dẫn hình ảnh trả về từ Cloudinary vào trường avatar
-    #         self.avatar = response['url']
-    #     super().save(*args, **kwargs)
+    def save_avatar(self, *args, **kwargs):
+        # Kiểm tra xem có tệp tin hình ảnh mới được tải lên hay không
+        if self.avatar and 'cloudinary.com' not in self.avatar:
+            # Tải lên hình ảnh lên Cloudinary
+            response = cloudinary.uploader.upload(self.avatar)
+            # Lưu đường dẫn hình ảnh trả về từ Cloudinary vào trường avatar
+            self.avatar = response['url']
+        super().save(*args, **kwargs)
 
 
 class ThongTinCan(models.Model):
@@ -67,3 +67,7 @@ class PhieuCan(models.Model):
 
     class Meta:
         ordering = ['-id']
+
+
+
+

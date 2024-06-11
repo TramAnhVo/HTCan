@@ -1,15 +1,14 @@
-from cloudinary import CloudinaryImage
 from cloudinary.forms import CloudinaryFileField
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils.html import mark_safe
 from django import forms
 from django.contrib import admin
 from django.urls import path
-from django.utils.timezone import localtime
+from django.utils.timezone import localtime, make_aware, get_current_timezone
 from pytz import timezone
+from django.shortcuts import render
 
 from . import dao
-from .models import PhieuCan, ThongTinCan, User
+from .models import PhieuCan, ThongTinCan, User, Weight, Customer, Product
 from django.template.response import TemplateResponse
 from oauth2_provider.models import Application, RefreshToken, IDToken, AccessToken, Grant
 
@@ -18,6 +17,9 @@ class CanDienTuAdmin(admin.AdminSite):
     site_header = 'HỆ THỐNG CÂN ĐIỆN TỬ'
     site_title = "HỆ THỐNG CÂN ĐIỆN TỬ"
     index_title = "HỆ THỐNG CÂN ĐIỆN TỬ"
+
+    def admin(self, request):
+        return render(request, 'admin/base.html')
 
     def get_urls(self):
         return [
@@ -119,6 +121,44 @@ class UserAdmin(admin.ModelAdmin):
     lock_selected_accounts.short_description = "Lock selected accounts"
 
 
+class WeightAdmin(admin.ModelAdmin):
+    list_display = ['Ticketnum', 'Truckno', 'DateIn', 'DateOut', 'ProdName', 'CustName', 'Firstweight',
+                    'Secondweight', 'Netweight', 'Trantype', 'TimeIn', 'TimeOut' ]
+    list_filter = ['date_time', 'Trantype']
+    search_fields = ['ProdName', 'CustName']
+    readonly_fields = ['ProdName', 'CustName', 'Netweight', 'DateIn', 'DateOut', 'TimeIn', 'TimeOut' ]
+    list_per_page = 20
+
+    def DateIn(self, obj):
+        return obj.Date_in.strftime('%d-%m-%Y')
+
+    def DateOut(self, obj):
+        return obj.Date_out.strftime('%d-%m-%Y')
+
+    def NgayTao(self, obj):
+        vn_tz = timezone('Asia/Ho_Chi_Minh')
+        vn_time = localtime(obj.date_time).astimezone(vn_tz)
+        return vn_time.strftime('%d-%m-%Y %H:%M:%S')
+
+    def TimeOut(self, obj):
+        if obj.time_out:
+            time_out_aware = make_aware(obj.time_out, timezone=get_current_timezone())
+            return time_out_aware.strftime('%H:%M:%S')
+
+    def TimeIn(self, obj):
+        if obj.time_in:
+            time_out_aware = make_aware(obj.time_in, timezone=get_current_timezone())
+            return time_out_aware.strftime('%H:%M:%S')
+
+
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ['ProdCode', 'Prodname', 'CreatDay', 'State']
+
+
+class CustomerAdmin(admin.ModelAdmin):
+    list_display = ['Custcode', 'Custname', 'CreatDay', 'State']
+
+
 class OauthAdmin(admin.ModelAdmin):
     list_display = ['client_id', 'name', 'user_id', 'client_type', 'authorization_grant_type', 'created']
 
@@ -133,5 +173,6 @@ admin_site.register(AccessToken)
 admin_site.register(RefreshToken)
 admin_site.register(Grant)
 admin_site.register(IDToken)
+
 
 

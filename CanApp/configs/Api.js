@@ -1,6 +1,7 @@
 import axios from "axios"
 
-const HOST = "http://192.168.1.25:8000"
+// const HOST = "http://192.168.1.25:8000"
+const HOST = "https://candientu.pythonanywhere.com/"
 
 export const endpoints = {
     'scale': (userId) => `/users/${userId}/scales/`,

@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework import routers
 from . import views
+from .admin import admin_site
 
 app_name = 'admin'
 router = routers.DefaultRouter()
@@ -10,7 +11,10 @@ router.register('users', views.UserView, basename='users')
 
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('', views.home, name='index'),
+    path('admin/', admin_site.urls, name='home'),
+    path('api/', include(router.urls)),
+    path('admin/can-stats/', views.chart_view, name='can-stats'),
     path('stats/count-PhieuCan-day/<int:canId>/', views.PhieuCanView.as_view({'get': 'count_PhieuCan'}),name='count-PhieuCan'),
     path('stats/count-PhieuCan-month/<int:canId>/', views.PhieuCanView.as_view({'get': 'count_PhieuCan_by_month'}), name='count-PhieuCan-by-month'),
     path('stats/count-PhieuCan-week/', views.PhieuCanView.as_view({'get': 'count_PhieuCan_by_week'}), name='count_PhieuCan_by_week'),

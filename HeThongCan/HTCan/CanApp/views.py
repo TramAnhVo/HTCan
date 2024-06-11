@@ -1,19 +1,25 @@
 import calendar
-
 import pytz
 from django.shortcuts import render
 from rest_framework import viewsets, permissions, generics, status
 from rest_framework.decorators import action
 from rest_framework.parsers import JSONParser
-from rest_framework.views import Response
+from rest_framework.views import Response, APIView
 from django.http import JsonResponse, HttpResponseRedirect
 from datetime import date, timedelta, datetime
 from django.db.models import Sum, Count
 from django.utils import timezone
-from django.db.models.functions import ExtractWeek, TruncDate
 
 from . import serializers
 from .models import PhieuCan, ThongTinCan, User
+
+
+def home(request):
+    return render(request, 'layout/home.html')
+
+
+def chart_view(request):
+    return render(request, 'admin/chart.html')
 
 
 class PhieuCanView(viewsets.ViewSet,
@@ -266,6 +272,7 @@ class CanView(viewsets.ViewSet,
 
 class UserView(viewsets.ViewSet,
                generics.CreateAPIView,
+               generics.DestroyAPIView,
                generics.UpdateAPIView,
                generics.ListAPIView):
     queryset = User.objects.filter(is_active=True).all()
@@ -289,3 +296,4 @@ class UserView(viewsets.ViewSet,
 
         return Response(serializers.CanSerializer(users, many=True, context={'request': request}).data,
                         status=status.HTTP_200_OK)
+

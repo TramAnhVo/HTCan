@@ -28,8 +28,6 @@ SECRET_KEY = 'django-insecure-pl1boi&6e4bc5+q=3njr_3ej-5u8)0*vpf17=$7nf&a^0us$-h
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -93,7 +91,7 @@ ROOT_URLCONF = 'HTCan.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates/')],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -119,7 +117,7 @@ DATABASES = {
         'USER': 'root',
         'PASSWORD': 'Admin@123',
         'HOST': ''  # mặc định localhost
-    }
+    },
 }
 
 

@@ -4,7 +4,7 @@ import { LineChart } from "react-native-chart-kit";
 import Api, { endpoints } from "../configs/Api";
 
 
-export default ChartLine = ({route}) => {
+export default ChartLine = ({ route }) => {
     const [month, setMonth] = useState(null)
     const [count, setCount] = useState(null)
     const [data, setData] = useState(null)
@@ -96,21 +96,23 @@ export default ChartLine = ({route}) => {
                 {data === null ? <ActivityIndicator /> : <>
                     {data.map(m => (
                         <View style={styles.ItemMonth} key={m.month}>
-                            <Text style={{ color: 'blue', fontSize: 18, fontWeight: '700', alignItems: 'center' }}>Tháng {m.month}</Text>
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                <Text style={{ color: 'blue', fontSize: 18, fontWeight: '700', alignItems: 'center' }}>Tháng {m.month}</Text>
                                 <Text style={{ color: 'red', fontSize: 16, fontWeight: '700' }}>{m.count}
                                     <Text style={{ color: 'black', fontWeight: '400', fontSize: 15 }}> phiếu cân</Text>
                                 </Text>
-                                <Text style={{ color: 'green', fontSize: 16, fontWeight: '700' }}>{m.sum}
-                                    <Text style={{ color: 'black', fontWeight: '400', fontSize: 15 }}> kg hàng</Text>
-                                </Text>
                             </View>
+
+                            <View style={{ flexDirection: 'row' }}>
+                                <Text style={{ fontSize: 15 }}>Tổng trọng lượng hàng: </Text>
+                                <Text style={{ fontSize: 16, color: 'green', paddingLeft: 5, fontWeight: '700' }}>{m.sum}</Text>
+                            </View>
+
                             <View style={{ flexDirection: 'row' }}>
                                 <Text style={{ fontSize: 15 }}>Tổng trọng lượng </Text>
-                                <Text style={{ fontSize: 16, color: 'red', paddingLeft: 5, fontWeight: '700' }}>{m.total}
-                                    <Text style={{ color: 'black', fontWeight: '400', fontSize: 15 }}> kg</Text>
-                                </Text>
+                                <Text style={{ fontSize: 16, color: 'red', paddingLeft: 5, fontWeight: '700' }}>{m.total}</Text>
                             </View>
+
                             <Text style={{ fontSize: 14 }}>(Đã bao gồm bì với hàng)</Text>
                         </View>
                     ))}

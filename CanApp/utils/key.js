@@ -1,2 +1,2 @@
-export const CLIENT_ID = 'QrdlsvDL5jMvJdSRH1OM220VADzY8gk1iHfqQ1Pn';
-export const CLIENT_SECRET = 'jWifBzu4n8amRkyzQixBlHyEqw04rUfAJYaSB3zLXcVToFjfzvX1XFaua7Pu0yyMpZYjqHITxjvqCgPtRZA2L9zSy3Aj7dFjFakmje4JoAtbKlkcjbCx9qDViZ670nLL'
+export const CLIENT_ID = 'n5KwKzxfXwljIStzTSFlu69qKFXqbqjkWXSLd6G8';
+export const CLIENT_SECRET = 'HgQ5JVoyqdHVkuxZQ2pdgZtP4M5jwtbYv7QrVcmQ9IC9iOmUbKj62gxWS2XTH80RxQxUpxyNb6EQMegatEjUIKQUJaOYDXOWnj72kCsA1ke8At4TFVviID2yRjFDBC43'

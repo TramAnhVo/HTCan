@@ -60,7 +60,7 @@ export default Weight = ({ route }) => {
                 <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 20, marginBottom: 20 }}>
                     {countWeight === null ? <ActivityIndicator /> : <>
                         <View style={styles.TitleTotal}>
-                            <Text style={{ fontSize: 16, fontWeight: '700' }}>Tổng số phiếu cân</Text>
+                            <Text style={{ fontSize: 16, fontWeight: '700', textAlign: 'center' }}>Tổng số phiếu</Text>
                             <Text style={{ fontSize: 35, fontWeight: '700', textAlign: 'center', color: 'red' }}>{countWeight.count}</Text>
                         </View>
 
