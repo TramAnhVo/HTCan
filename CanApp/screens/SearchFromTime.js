@@ -5,34 +5,51 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Api, { endpoints } from "../configs/Api";
 
-export default SearchMonthYear = ({ route, navigation }) => {
+export default SearchFromTime = ({ route, navigation }) => {
     const [weight, setWeight] = useState(null)
-    const { year, month } = route.params;
+    const [refreshing, setRefreshing] = useState(false);
+    const { yearFrom, monthFrom, dayFrom, yearTo, monthTo, dayTo } = route.params;
+    const [selectedOption, setSelectedOption] = useState(null);
     const [stateSort, setStateSort] = useState(true)
     const [type, setType] = useState(3)
-    const [selectedOption, setSelectedOption] = useState(null);
 
     useEffect(() => {
         const loadWeightDetail = async (type) => {
-            let res = await Api.get(endpoints['SreachMonthYear'](year, month, type));
-            setWeight(res.data);
+            try {
+                let res = await Api.get(endpoints['SreachFromDate'](yearFrom, monthFrom, dayFrom, yearTo, monthTo, dayTo, type));
+                setWeight(res.data);
+            } catch (ex) {
+                console.error(ex);
+            } finally {
+                setRefreshing(false);
+            }
         }
 
         loadWeightDetail(type);
-    }, [year, month, type])
+    }, [yearFrom, monthFrom, dayFrom, yearTo, monthTo, dayTo, type])
 
-    // link đến phiếu cân chi tiết
     const goToWeightDetail = (weightId) => {
         navigation.navigate("WeightDetail", { "weightId": weightId })
     }
 
-    // hàm phân cách hàng ngàn với hàng đơn vị 
     const formatCurrency = (value) => {
         // Lấy phần nguyên của giá trị
         const intValue = parseInt(value);
 
         // Định dạng số tiền với dấu phân cách hàng nghìn
         return intValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    };
+
+    //  hàm hiện thị nút đang hoạt động (tô màu nút đã chọn)
+    const handleOptionSelect = (option) => {
+        setSelectedOption(option);
+        if (option === 'option1') {
+            setType(3);
+        } else if (option === 'option2') {
+            setType(1);
+        } else if (option === 'option3') {
+            setType(2);
+        }
     };
 
     // hàm sắp xếp các phiếu cân
@@ -46,18 +63,6 @@ export default SearchMonthYear = ({ route, navigation }) => {
         }
 
         return data;
-    };
-
-    //  hàm hiện thị nút đang hoạt động (tô màu nút đã chọn)
-    const handleOptionSelect = (option) => {
-        setSelectedOption(option);
-        if (option === 'option1') {
-            setType(3);
-        } else if (option === 'option2') {
-            setType(1);
-        } else if (option === 'option3') {
-            setType(2);
-        }
     };
 
     return (
@@ -81,11 +86,11 @@ export default SearchMonthYear = ({ route, navigation }) => {
                             <Text style={{ marginRight: 5, textAlign: 'center', fontSize: 15 }}>Tất cả</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={[styles.ItemSreach, style = { width: '25%' },  selectedOption === 'option2' && styles.selectedItem,]} onPress={() => handleOptionSelect('option2')}>
+                        <TouchableOpacity style={[styles.ItemSreach, style = { width: '25%' }, selectedOption === 'option2' && styles.selectedItem,]} onPress={() => handleOptionSelect('option2')}>
                             <Text style={{ marginRight: 5, textAlign: 'center', fontSize: 15 }}>Nhập hàng</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={[styles.ItemSreach, style = { width: '24%' },  selectedOption === 'option3' && styles.selectedItem,]} onPress={() => handleOptionSelect('option3')}>
+                        <TouchableOpacity style={[styles.ItemSreach, style = { width: '24%' }, selectedOption === 'option3' && styles.selectedItem,]} onPress={() => handleOptionSelect('option3')}>
                             <Text style={{ marginRight: 5, textAlign: 'center', fontSize: 15 }}>Xuất hàng</Text>
                         </TouchableOpacity>
 
@@ -137,8 +142,6 @@ export default SearchMonthYear = ({ route, navigation }) => {
                     </View>
                 ))
                 )}
-
-
             </>}
         </ScrollView>
     )

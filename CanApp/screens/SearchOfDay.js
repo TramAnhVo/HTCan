@@ -1,19 +1,23 @@
+import { FontAwesome } from '@expo/vector-icons';
+import { LinearGradient } from "expo-linear-gradient";
 import moment from "moment";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Api, { endpoints } from "../configs/Api";
 
-export default SearchOfDay = ({ route }) => {
+export default SearchOfDay = ({ route, navigation }) => {
     const [weight, setWeight] = useState(null)
     const [refreshing, setRefreshing] = useState(false);
     const { nam, ngay, thang } = route.params;
+    const [type, setType] = useState(3)
+    const [selectedOption, setSelectedOption] = useState(null);
+    const [stateSort, setStateSort] = useState(true)
 
     useEffect(() => {
-        const loadWeightDetail = async () => {
+        const loadWeightDetail = async (type) => {
             try {
-                let res = await Api.get(endpoints['WeightWeekDetail'](nam, thang, ngay));
+                let res = await Api.get(endpoints['WeightWeekDetail'](nam, thang, ngay, type));
                 setWeight(res.data);
-                console.log(res.data)
             } catch (ex) {
                 console.error(ex);
             } finally {
@@ -21,75 +25,138 @@ export default SearchOfDay = ({ route }) => {
             }
         }
 
-        loadWeightDetail();
-    }, [])
+        loadWeightDetail(type);
+    }, [nam, thang , ngay , type])
+
+    const goToWeightDetail = (weightId) => {
+        navigation.navigate("WeightDetail", { "weightId": weightId })
+    }
+
+    const formatCurrency = (value) => {
+        // Lấy phần nguyên của giá trị
+        const intValue = parseInt(value);
+
+        // Định dạng số tiền với dấu phân cách hàng nghìn
+        return intValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    };
+
+    
+    //  hàm hiện thị nút đang hoạt động (tô màu nút đã chọn)
+    const handleOptionSelect = (option) => {
+        setSelectedOption(option);
+        if (option === 'option1') {
+            setType(3);
+        } else if (option === 'option2') {
+            setType(1);
+        } else if (option === 'option3') {
+            setType(2);
+        }
+    };
+
+    // hàm sắp xếp các phiếu cân
+    const sortWeight = (data) => {
+        if (stateSort === true) {
+            data.sort((a, b) => a.phieuCan.MaPhieu.localeCompare(b.phieuCan.MaPhieu));
+            setStateSort(false)
+        } else {
+            data.sort((a, b) => b.phieuCan.MaPhieu.localeCompare(a.phieuCan.MaPhieu));
+            setStateSort(true)
+        }
+
+        return data;
+    };
 
     return (
-        <ScrollView style={{ flex: 1, backgroundColor: 'lightblue' }}>
-            {weight === null ? <ActivityIndicator /> : <>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginLeft: 5, marginRight: 5, marginBottom: 10, marginTop: 10 }}>
-                    <View style={[styles.ItemTitle, style = { width: '60%' }]}>
-                        <Text style={{ fontWeight: '700', textAlign: 'center', fontSize: 17 }}>Tổng trọng lượng hàng</Text>
-                        <Text style={{ color: 'green', fontSize: 35, textAlign: 'center', fontWeight: '700' }}>{weight.TongHang}</Text>
-                    </View>
-
-                    <View style={[styles.ItemTitle, style = { width: '39%' }]}>
-                        <Text style={{ fontWeight: '700', textAlign: 'center', fontSize: 16 }}>Tổng số phiếu</Text>
-                        <Text style={{ color: 'green', fontSize: 35, textAlign: 'center', fontWeight: '700' }}>{weight.TongSoPhieu}</Text>
-                    </View>
+        <ScrollView style={{ flex: 1 }}>
+        {weight === null ? <ActivityIndicator /> : <>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 10, marginBottom: 2 }}>
+                <View style={styles.TitleTotal}>
+                    <Text style={{ fontSize: 17, fontWeight: '700', textAlign: 'center' }}>Tổng phiếu</Text>
+                    <Text style={{ fontSize: 28, fontWeight: '700', textAlign: 'center', color: 'red' }}>{weight.TongSoPhieu}</Text>
                 </View>
 
-                {weight.PhieuCan.length === 0 ? (
-                    <Text>Không có phiếu cân</Text>
-                ) : (weight && weight.PhieuCan.map((item, index) => (
-                    <View style={styles.ItemWeight} key={index}>
+                <View style={styles.TolalWeight}>
+                    <Text style={{ fontSize: 17, fontWeight: '700', textAlign: 'center' }}>Tổng trọng lượng hàng</Text>
+                    <Text style={{ fontSize: 28, fontWeight: '700', textAlign: 'center', color: 'red' }}>{formatCurrency(weight.TongHang)}</Text>
+                </View>
+            </View>
+
+            <View style={{ height: 55 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 10 }}>
+                    <TouchableOpacity style={[styles.ItemSreach, style = { width: '16%' }, selectedOption === 'option1' && styles.selectedItem]} onPress={() => handleOptionSelect('option1')}>
+                        <Text style={{ marginRight: 5, textAlign: 'center', fontSize: 15 }}>Tất cả</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={[styles.ItemSreach, style = { width: '25%' }, selectedOption === 'option2' && styles.selectedItem,]} onPress={() => handleOptionSelect('option2')}>
+                        <Text style={{ marginRight: 5, textAlign: 'center', fontSize: 15 }}>Nhập hàng</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={[styles.ItemSreach, style = { width: '24%' }, selectedOption === 'option3' && styles.selectedItem,]} onPress={() => handleOptionSelect('option3')}>
+                        <Text style={{ marginRight: 5, textAlign: 'center', fontSize: 15 }}>Xuất hàng</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={[styles.ItemSreach, style = { width: '22%' }]} onPress={() => sortWeight(weight.PhieuCan)}>
+                        <Text style={{ marginRight: 8, textAlign: 'center', fontSize: 15 }}>sắp xếp</Text>
+                        <FontAwesome name="sort" size={18} color="black" />
+                    </TouchableOpacity>
+                </View>
+            </View>
+
+            {weight.PhieuCan.length === 0 ? (
+                <Text style={{ fontSize: 17, textAlign: 'center', marginTop: 10 }}>Không có phiếu cân</Text>
+            ) : (weight && weight.PhieuCan.map((item, index) => (
+                <View key={item.phieuCan.key}>
+                    <TouchableOpacity style={styles.ItemWeight} onPress={() => goToWeightDetail(item.phieuCan.key)}>
                         <View style={{ flexDirection: 'row' }}>
-                            <Text style={{ fontSize: 17 }}>Tên cân: </Text>
-                            <Text style={{ fontSize: 17, marginLeft: 5 }}>{item.phieuCan.Can.name}</Text>
-                        </View>
-
-                        <View style={{ flexDirection: 'row', marginTop: 10 }}>
                             <Text style={{ fontSize: 17 }}>Mã phiếu: </Text>
-                            <Text style={{ fontSize: 17, marginLeft: 5, fontWeight: '800', color: 'red' }}>{item.phieuCan.MaPhieu}</Text>
+                            <Text style={{ fontSize: 17, marginLeft: 5, fontWeight: '800' }}>{item.phieuCan.MaPhieu}</Text>
                         </View>
 
+                        <View style={{ flexDirection: 'row', marginTop: 4 }}>
+                            <Text style={{ fontSize: 17 }}>Trọng lượng thực: </Text>
+                            <Text style={{ fontSize: 17, marginLeft: 5, fontWeight: '800', color: 'red' }}>{formatCurrency(item.phieuCan.TLHang)}</Text>
+                        </View>
 
-                        <View style={{ flexDirection: 'row', marginTop: 10 }}>
+                        <View style={{ flexDirection: 'row', marginTop: 4 }}>
                             <Text style={{ fontSize: 17 }}>Ngày tạo phiếu: </Text>
-                            <Text style={{ fontSize: 17, marginLeft: 5, fontWeight: '700' }}>{moment(item.phieuCan.NgayTao).utcOffset(7).format('DD/MM/YYYY HH:mm:ss')}</Text>
+                            <Text style={{ fontSize: 17, marginLeft: 5, fontWeight: '700' }}>{moment(item.phieuCan.NgayTaoPhieu).utcOffset(7).format('DD/MM/YYYY HH:mm:ss')}</Text>
                         </View>
+                    </TouchableOpacity>
 
-                        <View style={{ flexDirection: 'row', marginTop: 10, justifyContent: 'space-between' }}>
-                            <View style={{ flexDirection: 'row' }}>
-                                <Text style={{ fontSize: 17 }}>Tổng: </Text>
-                                <Text style={{ fontSize: 17, marginLeft: 5, fontWeight: '800', color: 'red' }}>{item.phieuCan.TLTong}</Text>
-                            </View>
-
-                            <View style={{ flexDirection: 'row' }}>
-                                <Text style={{ fontSize: 17 }}>Bì: </Text>
-                                <Text style={{ fontSize: 17, marginLeft: 5, fontWeight: '800', color: 'red' }}>{item.phieuCan.TLBi}</Text>
-                            </View>
-
-                            <View style={{ flexDirection: 'row' }}>
-                                <Text style={{ fontSize: 17 }}>Hàng: </Text>
-                                <Text style={{ fontSize: 17, marginLeft: 5, fontWeight: '800', color: 'red' }}>{item.phieuCan.TLHang}</Text>
-                            </View>
-                        </View>
-                    </View>
-                ))
-                )}
-
-
-            </>}
-        </ScrollView>
+                    <LinearGradient
+                        colors={['#00FF7F', '#008B00']}
+                        start={[0, 0]}
+                        end={[0, 1]}
+                        style={{
+                            width: '4%',
+                            borderTopLeftRadius: 10,
+                            borderBottomLeftRadius: 10,
+                            margin: 5,
+                            height: 97,
+                            position: 'absolute',
+                            top: 0,
+                            left: 5
+                        }}
+                    >
+                        <View></View>
+                    </LinearGradient>
+                </View>
+            ))
+            )}
+        </>}
+    </ScrollView>
     )
 }
 
 const styles = StyleSheet.create({
     ItemWeight: {
         backgroundColor: 'white',
-        height: 155,
-        padding: 15,
+        height: 97,
+        paddingTop: 10,
+        paddingBottom: 10,
+        paddingLeft: 25,
+        borderTopLeftRadius: 10,
+        borderBottomLeftRadius: 10,
         width: '95%',
         marginLeft: 10,
         marginTop: 5,
@@ -112,5 +179,65 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.8,
         shadowRadius: 10,
         elevation: 7,
-    }
+    },
+
+    TitleTotal: {
+        backgroundColor: 'white',
+        padding: 10,
+        height: 80,
+        width: '33%',
+        borderRadius: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.8,
+        shadowRadius: 10,
+        elevation: 7,
+    },
+
+    TolalWeight: {
+        backgroundColor: 'white',
+        padding: 10,
+        height: 80,
+        width: '62%',
+        borderRadius: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.8,
+        shadowRadius: 10,
+        elevation: 7,
+    },
+
+    ItemSreach: {
+        backgroundColor: 'white',
+        flexDirection: 'row',
+        padding: 8,
+        borderRadius: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.8,
+        shadowRadius: 10,
+        elevation: 7,
+    },
+
+    InputText: {
+        borderRadius: 5,
+        backgroundColor: 'white',
+        borderWidth: 1,
+        width: '33%',
+        padding: 4,
+        fontSize: 16,
+    },
+
+    SearchButton: {
+        backgroundColor: '#0099FF',
+        width: '16%',
+        padding: 5,
+        borderWidth: 1,
+        borderColor: '#0099FF',
+        borderRadius: 20
+    },
+
+    selectedItem: {
+        backgroundColor: 'lightblue',
+    },
 })

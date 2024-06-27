@@ -33,6 +33,10 @@ class ScaleSerializer(ModelSerializer):
 
 
 class WeightSerializer(ModelSerializer):
+    # CanId = ScaleSerializer()
+    Custcode = CustomerSerializer()
+    Prodcode = ProductSerializer()
+
     class Meta:
         model = Weight
         fields = '__all__'

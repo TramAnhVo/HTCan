@@ -51,13 +51,13 @@ export default ScalesChartLine = ({ navigation }) => {
                             <View style={{ flexDirection: 'row', marginBottom: 10, marginLeft: 5 }}>
                                 <Ionicons name="scale" size={20} color="black" style={{ paddingRight: 5 }} />
                                 <Text style={{ paddingRight: 10, fontSize: 16, fontWeight: '700' }}>Tên cân:</Text>
-                                <Text style={{ fontSize: 16 }}>{s.TenCan}</Text>
+                                <Text style={{ fontSize: 16 }}>{s.ScaleName}</Text>
                             </View>
 
                             <View style={{ flexDirection: 'row', marginLeft: 5 }}>
                                 <Fontisto name="date" size={20} color="black" style={{ paddingRight: 5 }} />
                                 <Text style={{ paddingRight: 10, fontSize: 16, fontWeight: '700' }}>Ngày thiết lập:</Text>
-                                <Text style={{ fontSize: 16 }}>{moment(s.NgayTao, 'YYYY-MM-DD').format('DD/MM/YYYY')}</Text>
+                                <Text style={{ fontSize: 16 }}>{moment(s.CreatDay, 'YYYY-MM-DD').format('DD/MM/YYYY')}</Text>
                             </View>
                         </TouchableOpacity>
 

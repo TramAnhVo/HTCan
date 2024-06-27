@@ -52,6 +52,7 @@ import pymysql
 pymysql.install_as_MySQLdb()
 
 AUTH_USER_MODEL = 'ScaleApp.User'
+ALLOWED_HOSTS = ['*']
 
 import cloudinary
 cloudinary.config(
@@ -62,8 +63,8 @@ cloudinary.config(
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-# CLIENT_ID = 'QrdlsvDL5jMvJdSRH1OM220VADzY8gk1iHfqQ1Pn'
-# CLIENT_SECRET = 'jWifBzu4n8amRkyzQixBlHyEqw04rUfAJYaSB3zLXcVToFjfzvX1XFaua7Pu0yyMpZYjqHITxjvqCgPtRZA2L9zSy3Aj7dFjFakmje4JoAtbKlkcjbCx9qDViZ670nLL'
+CLIENT_ID = 'dKRNzwMxrA2ppNDq3QGEFxcPHMrCydVMRosqkBhh'
+CLIENT_SECRET = 'YngfObvq5qcRJABlqPow8HmM9SGM5dOw5JGBKADgcjadXmVvAIRzcHMIxMNMf4zFZrSGBBlhHQ1lldLS9bDdQYPf1KXQoMEA2QLAzN5A4YUb5n4r6pz7WE57AioZymKf'
 
 OAUTH2_PROVIDER = {
     'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore'

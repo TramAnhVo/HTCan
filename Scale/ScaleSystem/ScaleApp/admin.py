@@ -81,6 +81,8 @@ class WeightAdmin(admin.ModelAdmin):
 
 class ProductAdmin(admin.ModelAdmin):
     list_display = ['ProdCode', 'Prodname', 'Created_Date', 'State']
+    list_filter = ['CreatDay']
+    search_fields = ['Prodname', 'ProdCode']
 
     def Created_Date(self, obj):
         vn_tz = timezone('Asia/Ho_Chi_Minh')
@@ -90,6 +92,8 @@ class ProductAdmin(admin.ModelAdmin):
 
 class CustomerAdmin(admin.ModelAdmin):
     list_display = ['Custcode', 'Custname', 'Created_Date', 'State']
+    list_filter = ['CreatDay']
+    search_fields = ['Custcode', 'Custname']
 
     def Created_Date(self, obj):
         vn_tz = timezone('Asia/Ho_Chi_Minh')
@@ -98,7 +102,8 @@ class CustomerAdmin(admin.ModelAdmin):
 
 
 class ScaleAdmin(admin.ModelAdmin):
-    list_display = ['ScaleName', 'Created_Date', 'State']
+    list_display = ['id','ScaleName', 'Created_Date', 'UserId' , 'State']
+    list_filter = ['CreatDay']
 
     def Created_Date(self, obj):
         vn_tz = timezone('Asia/Ho_Chi_Minh')

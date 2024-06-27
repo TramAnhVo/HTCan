@@ -1,38 +1,49 @@
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import moment from "moment";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Api, { endpoints } from "../configs/Api";
 
-export default SearchMonthYear = ({ route, navigation }) => {
+export default WeightChartMonth = ({ route, navigation }) => {
     const [weight, setWeight] = useState(null)
-    const { year, month } = route.params;
+    const { month, scaleId } = route.params;
+    const [trantype, setTrantype] = useState(3);
     const [stateSort, setStateSort] = useState(true)
-    const [type, setType] = useState(3)
     const [selectedOption, setSelectedOption] = useState(null);
 
     useEffect(() => {
-        const loadWeightDetail = async (type) => {
-            let res = await Api.get(endpoints['SreachMonthYear'](year, month, type));
-            setWeight(res.data);
+        const loadData = async (trantype) => {
+            try {
+                let res = await Api.get(endpoints['weightDetailMonth'](month, trantype, scaleId));
+                setWeight(res.data)
+            } catch (ex) {
+                console.error(ex);
+            }
         }
 
-        loadWeightDetail(type);
-    }, [year, month, type])
+        loadData(trantype)
+    }, [month, trantype, scaleId])
 
-    // link đến phiếu cân chi tiết
-    const goToWeightDetail = (weightId) => {
-        navigation.navigate("WeightDetail", { "weightId": weightId })
-    }
-
-    // hàm phân cách hàng ngàn với hàng đơn vị 
+    // hàm để phân cách giữa hàng ngàn với hàng khác
     const formatCurrency = (value) => {
         // Lấy phần nguyên của giá trị
         const intValue = parseInt(value);
 
         // Định dạng số tiền với dấu phân cách hàng nghìn
         return intValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    };
+
+    //  hàm hiện thị nút đang hoạt động (tô màu nút đã chọn)
+    const handleOptionSelect = (option) => {
+        setSelectedOption(option);
+        if (option === 'option1') {
+            setTrantype(3);
+        } else if (option === 'option2') {
+            setTrantype(1);
+        } else if (option === 'option3') {
+            setTrantype(2);
+        }
     };
 
     // hàm sắp xếp các phiếu cân
@@ -48,16 +59,20 @@ export default SearchMonthYear = ({ route, navigation }) => {
         return data;
     };
 
-    //  hàm hiện thị nút đang hoạt động (tô màu nút đã chọn)
-    const handleOptionSelect = (option) => {
-        setSelectedOption(option);
-        if (option === 'option1') {
-            setType(3);
-        } else if (option === 'option2') {
-            setType(1);
-        } else if (option === 'option3') {
-            setType(2);
-        }
+    // link đến phiếu cân chi tiết
+    const goToWeightDetail = (weightId) => {
+        navigation.navigate("WeightDetail", { "weightId": weightId })
+    }
+
+    // tính tổng trọng lượng
+    const TotalWeight = (item) => {
+        let totalWeight = 0;
+        let countWeight = 0;
+        item.forEach((items) => {
+            totalWeight += items.phieuCan.TLHang;
+            countWeight += 1;
+        });
+        return { totalWeight, countWeight };
     };
 
     return (
@@ -66,12 +81,12 @@ export default SearchMonthYear = ({ route, navigation }) => {
                 <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 10, marginBottom: 2 }}>
                     <View style={styles.TitleTotal}>
                         <Text style={{ fontSize: 17, fontWeight: '700', textAlign: 'center' }}>Tổng phiếu</Text>
-                        <Text style={{ fontSize: 28, fontWeight: '700', textAlign: 'center', color: 'red' }}>{weight.TongSoPhieu}</Text>
+                        <Text style={{ fontSize: 28, fontWeight: '700', textAlign: 'center', color: 'red' }}>{TotalWeight(weight.PhieuCan).countWeight}</Text>
                     </View>
 
                     <View style={styles.TolalWeight}>
                         <Text style={{ fontSize: 17, fontWeight: '700', textAlign: 'center' }}>Tổng trọng lượng hàng</Text>
-                        <Text style={{ fontSize: 28, fontWeight: '700', textAlign: 'center', color: 'red' }}>{formatCurrency(weight.TongHang)}</Text>
+                        <Text style={{ fontSize: 28, fontWeight: '700', textAlign: 'center', color: 'red' }}>{formatCurrency(TotalWeight(weight.PhieuCan).totalWeight)}</Text>
                     </View>
                 </View>
 
@@ -81,11 +96,11 @@ export default SearchMonthYear = ({ route, navigation }) => {
                             <Text style={{ marginRight: 5, textAlign: 'center', fontSize: 15 }}>Tất cả</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={[styles.ItemSreach, style = { width: '25%' },  selectedOption === 'option2' && styles.selectedItem,]} onPress={() => handleOptionSelect('option2')}>
+                        <TouchableOpacity style={[styles.ItemSreach, style = { width: '25%' }, selectedOption === 'option2' && styles.selectedItem]} onPress={() => handleOptionSelect('option2')}>
                             <Text style={{ marginRight: 5, textAlign: 'center', fontSize: 15 }}>Nhập hàng</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={[styles.ItemSreach, style = { width: '24%' },  selectedOption === 'option3' && styles.selectedItem,]} onPress={() => handleOptionSelect('option3')}>
+                        <TouchableOpacity style={[styles.ItemSreach, style = { width: '24%' }, selectedOption === 'option3' && styles.selectedItem]} onPress={() => handleOptionSelect('option3')}>
                             <Text style={{ marginRight: 5, textAlign: 'center', fontSize: 15 }}>Xuất hàng</Text>
                         </TouchableOpacity>
 
@@ -137,7 +152,6 @@ export default SearchMonthYear = ({ route, navigation }) => {
                     </View>
                 ))
                 )}
-
 
             </>}
         </ScrollView>
@@ -213,24 +227,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.8,
         shadowRadius: 10,
         elevation: 7,
-    },
-
-    InputText: {
-        borderRadius: 5,
-        backgroundColor: 'white',
-        borderWidth: 1,
-        width: '33%',
-        padding: 4,
-        fontSize: 16,
-    },
-
-    SearchButton: {
-        backgroundColor: '#0099FF',
-        width: '16%',
-        padding: 5,
-        borderWidth: 1,
-        borderColor: '#0099FF',
-        borderRadius: 20
     },
 
     selectedItem: {

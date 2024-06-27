@@ -44,7 +44,6 @@ const ComboxMonth = () => {
 
     const handleConfirm = (value) => {
         setYear(value)
-        console.log(value)
     }
 
     const Confirm = () => {

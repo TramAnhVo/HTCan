@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Dimensions, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Dimensions, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import Api, { endpoints } from "../configs/Api";
 
 
-export default ChartLine = ({ route }) => {
+export default ChartLine = ({ route, navigation }) => {
     const [month, setMonth] = useState(null)
     const [count, setCount] = useState(null)
     const [data, setData] = useState(null)
@@ -35,6 +35,18 @@ export default ChartLine = ({ route }) => {
 
     if (month === null || count === null) {
         return <ActivityIndicator />;
+    }
+
+    const formatCurrency = (value) => {
+        // Lấy phần nguyên của giá trị
+        const intValue = parseInt(value);
+
+        // Định dạng số tiền với dấu phân cách hàng nghìn
+        return intValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    };
+
+    const goToWeightDetail = (month) => {
+        navigation.navigate("WeightChartMonth", { "month": month, "scaleId": scaleId })
     }
 
     return (
@@ -95,26 +107,21 @@ export default ChartLine = ({ route }) => {
             <ScrollView>
                 {data === null ? <ActivityIndicator /> : <>
                     {data.map(m => (
-                        <View style={styles.ItemMonth} key={m.month}>
+                        <TouchableOpacity style={styles.ItemMonth} key={m.month} onPress={() => goToWeightDetail(m.month)}>
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Text style={{ color: 'blue', fontSize: 18, fontWeight: '700', alignItems: 'center' }}>Tháng {m.month}</Text>
-                                <Text style={{ color: 'red', fontSize: 16, fontWeight: '700' }}>{m.count}
-                                    <Text style={{ color: 'black', fontWeight: '400', fontSize: 15 }}> phiếu cân</Text>
-                                </Text>
+                                <Text style={{ color: 'blue', fontSize: 18, fontWeight: '800', alignItems: 'center' }}>Tháng {m.month}</Text>
                             </View>
 
-                            <View style={{ flexDirection: 'row' }}>
-                                <Text style={{ fontSize: 15 }}>Tổng trọng lượng hàng: </Text>
-                                <Text style={{ fontSize: 16, color: 'green', paddingLeft: 5, fontWeight: '700' }}>{m.sum}</Text>
+                            <View style={{ flexDirection: 'row', marginTop: 3 }}>
+                                <Text style={{ fontSize: 16 }}>Tổng số phiếu cân: </Text>
+                                <Text style={{ fontSize: 18, color: 'green', paddingLeft: 5, fontWeight: '700', color:'red' }}>{m.count}</Text>
                             </View>
 
-                            <View style={{ flexDirection: 'row' }}>
-                                <Text style={{ fontSize: 15 }}>Tổng trọng lượng </Text>
-                                <Text style={{ fontSize: 16, color: 'red', paddingLeft: 5, fontWeight: '700' }}>{m.total}</Text>
+                            <View style={{ flexDirection: 'row', marginTop: 2 }}>
+                                <Text style={{ fontSize: 16 }}>Tổng trọng lượng hàng: </Text>
+                                <Text style={{ fontSize: 18, color: 'green', paddingLeft: 5, fontWeight: '700' }}>{formatCurrency(m.sum)}</Text>
                             </View>
-
-                            <Text style={{ fontSize: 14 }}>(Đã bao gồm bì với hàng)</Text>
-                        </View>
+                        </TouchableOpacity>
                     ))}
                 </>}
             </ScrollView>
@@ -126,14 +133,14 @@ const styles = StyleSheet.create({
     ItemMonth: {
         backgroundColor: 'white',
         width: '93%',
-        height: 120,
+        height: 100,
         borderRadius: 20,
-        paddingBottom: 15,
-        paddingTop: 15,
+        paddingBottom: 10,
+        paddingTop: 10,
         paddingLeft: 25,
         paddingRight: 25,
-        marginTop: 10,
-        marginBottom: 10,
+        marginTop: 5,
+        marginBottom: 5,
         marginLeft: 13,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },

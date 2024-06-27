@@ -17,7 +17,7 @@ export default OldWeight = () => {
         <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', margin: 10 }}>
                 <TextInput style={styles.Input}
-                    placeholder="Tìm kiếm mã phiếu cân"
+                    placeholder="Tìm kiếm tên sản phảm hoặc tên khách hàng"
                     value={searchText}
                     onChangeText={setSearchText}
                 />

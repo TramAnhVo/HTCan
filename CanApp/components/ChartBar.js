@@ -1,7 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
 import moment from "moment";
 import { useContext, useEffect, useState } from "react";
-import { ActivityIndicator, Dimensions, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Dimensions, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { BarChart } from "react-native-chart-kit";
 import Api, { endpoints } from "../configs/Api";
 import MyContext from "../configs/MyContext";
@@ -16,7 +16,7 @@ const chartConfig = {
     useShadowColorFromDataset: false, // 
 };
 
-export default ChartBar = ({ route }) => {
+export default ChartBar = ({ route, navigation }) => {
     const [week, setWeek] = useState(null)
     const [data, setData] = useState(null)
     const [count, setCount] = useState(null)
@@ -24,6 +24,8 @@ export default ChartBar = ({ route }) => {
     const [user, dispatch] = useContext(MyContext);
     const { scaleId } = route.params;
     const daysOfWeek = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật'];
+    const [stateWeek, setStateWek] = useState(0)
+    const [selectedOption, setSelectedOption] = useState(null);
 
     const handleRefresh = () => {
         setRefreshing(true);
@@ -31,12 +33,12 @@ export default ChartBar = ({ route }) => {
     };
 
     useEffect(() => {
-        loadStatsWeek();
-    }, [scaleId]);
+        loadStatsWeek(stateWeek);
+    }, [scaleId, stateWeek]);
 
-    const loadStatsWeek = async () => {
+    const loadStatsWeek = async (stateWeek) => {
         try {
-            let res = await Api.get(endpoints['StatsWeightWeek'](scaleId));
+            let res = await Api.get(endpoints['StatsWeightWeek'](scaleId, stateWeek));
             setData(res.data)
             setCount(res.data.map(item => item.count));
         } catch (ex) {
@@ -46,9 +48,40 @@ export default ChartBar = ({ route }) => {
         }
     };
 
+    const formatCurrency = (value) => {
+        // Lấy phần nguyên của giá trị
+        const intValue = parseInt(value);
+
+        // Định dạng số tiền với dấu phân cách hàng nghìn
+        return intValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    };
+
+    const goToWeightDetail = (date) => {
+        const keyDate = date
+        const d = new Date(keyDate)
+
+        const nam = d.getFullYear();
+        const thang = d.getMonth() + 1;
+        const ngay = d.getDate();
+
+        navigation.navigate("WeightChartWeek", { nam, thang, ngay, scaleId })
+    }
+
     if (count === null) {
         return <ActivityIndicator />;
     }
+
+    //  hàm hiện thị nút đang hoạt động (tô màu nút đã chọn)
+    const handleOptionSelect = (option) => {
+        setSelectedOption(option);
+        if (option === 'option1') {
+            setStateWek(0);
+        } else if (option === 'option2') {
+            setStateWek(1)
+        } else if (option === 'option3') {
+            setStateWek(2)
+        }
+    };
 
     return (
         <ScrollView
@@ -58,7 +91,7 @@ export default ChartBar = ({ route }) => {
                     onRefresh={handleRefresh}
                 />
             }
-            style={{ flex: 1, backgroundColor: 'white' }}>
+            style={{ flex: 1, backgroundColor: '#F5F5F5' }}>
             {/* chart 2 */}
             <View>
                 <BarChart
@@ -77,7 +110,6 @@ export default ChartBar = ({ route }) => {
                         }]
                     }}
 
-                    // style={graphStyle}
                     width={Dimensions.get("window").width - 5}
                     height={300}
                     yAxisLabel=""
@@ -88,33 +120,45 @@ export default ChartBar = ({ route }) => {
                     withCustomBarColorFromData
                     flatColor
                     style={{
-                        borderRadius: 5,
-                        marginTop: 15
+                        borderRadius: 5
                     }}
                 />
             </View>
 
-            {/* gắn weight detail và truyen tham so vao */}
-            <ScrollView style={{ backgroundColor: 'white' }}>
+            <View style={{ backgroundColor: 'white' }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                    <TouchableOpacity style={[styles.TagWeek, , selectedOption === 'option1' && styles.selectedItem]} onPress={() => handleOptionSelect('option1')}>
+                        <Text style={{ textAlign: 'center', fontSize: 15 }}>Tuần hiện tại</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={[styles.TagWeek, , selectedOption === 'option2' && styles.selectedItem]} onPress={() => handleOptionSelect('option2')}>
+                        <Text style={{ textAlign: 'center', fontSize: 15 }}>1 tuần trước</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={[styles.TagWeek, , selectedOption === 'option3' && styles.selectedItem]} onPress={() => handleOptionSelect('option3')}>
+                        <Text style={{ textAlign: 'center', fontSize: 15 }}>2 tuần trước</Text>
+                    </TouchableOpacity>
+                </View>
+
                 {data === null ? <ActivityIndicator /> : <>
                     {data.map((d, index) => (
                         <View style={{ marginTop: 10, marginBottom: 5 }} key={d.ngay}>
-                            <View style={styles.ItemWeek}>
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                            <TouchableOpacity style={styles.ItemWeek} onPress={() => goToWeightDetail(d.ngay)}>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
                                     <Text style={{ fontSize: 17, fontWeight: '700' }}>{daysOfWeek[index]}</Text>
                                     <Text style={{ fontSize: 18, fontWeight: '800', color: '#006600' }}>{moment(d.ngay, 'YYYY-MM-DD').format('DD/MM/YYYY')}</Text>
                                 </View>
 
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
                                     <Text style={{ fontSize: 15 }}>Tổng số phiếu cân:</Text>
                                     <Text style={{ fontSize: 18, fontWeight: '800', color: 'red' }}>{d.count}</Text>
                                 </View>
 
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                                     <Text style={{ fontSize: 15 }}>Tổng trọng lượng hàng:</Text>
-                                    <Text style={{ fontSize: 18, fontWeight: '800', color: '#006600' }}>{d.total_weight}</Text>
+                                    <Text style={{ fontSize: 18, fontWeight: '800', color: '#006600' }}>{formatCurrency(d.total_weight)}</Text>
                                 </View>
-                            </View>
+                            </TouchableOpacity>
 
                             <LinearGradient
                                 colors={['#00FF7F', '#008000']}
@@ -126,7 +170,7 @@ export default ChartBar = ({ route }) => {
                                     borderTopLeftRadius: 10,
                                     borderBottomLeftRadius: 10,
                                     marginLeft: 15,
-                                    height: 103,
+                                    height: 95,
                                     position: 'absolute',
                                     zIndex: 99,
                                     top: 0,
@@ -139,21 +183,20 @@ export default ChartBar = ({ route }) => {
                         </View>
                     ))}
                 </>}
-            </ScrollView>
-
+            </View>
         </ScrollView>
     )
 }
 
 const styles = StyleSheet.create({
     ItemWeek: {
-        backgroundColor: '#F5F5F5',
+        backgroundColor: 'white',
         position: 'relative',
-        height: 103,
+        height: 95,
         width: '90%',
-        paddingTop: 10,
+        paddingTop: 8,
         paddingRight: 30,
-        paddingBottom: 10,
+        paddingBottom: 8,
         paddingLeft: 30,
         marginLeft: '5%',
         borderRadius: 10,
@@ -162,5 +205,22 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.8,
         shadowRadius: 10,
         elevation: 7,
-    }
+    },
+
+    TagWeek: {
+        backgroundColor: 'white',
+        width: '28%',
+        height: 40,
+        paddingTop: 8,
+        borderRadius: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.8,
+        shadowRadius: 10,
+        elevation: 7,
+    },
+
+    selectedItem: {
+        backgroundColor: 'lightblue',
+    },
 })

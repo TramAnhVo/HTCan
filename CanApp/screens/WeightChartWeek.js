@@ -5,28 +5,34 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Api, { endpoints } from "../configs/Api";
 
-export default SearchMonthYear = ({ route, navigation }) => {
+export default WeightChartWeek = ({ route, navigation }) => {
     const [weight, setWeight] = useState(null)
-    const { year, month } = route.params;
-    const [stateSort, setStateSort] = useState(true)
+    const [refreshing, setRefreshing] = useState(false);
+    const [weightCopy, setWeightCopy] = useState(null)
+    const { nam, ngay, thang, scaleId } = route.params;
     const [type, setType] = useState(3)
     const [selectedOption, setSelectedOption] = useState(null);
+    const [stateSort, setStateSort] = useState(true)
+
+    const loadWeightDetail = async (type) => {
+        try {
+            let res = await Api.get(endpoints['weightDetailWeek'](nam, thang, ngay, type, scaleId));
+            setWeight(res.data);
+        } catch (ex) {
+            console.error(ex);
+        } finally {
+            setRefreshing(false);
+        }
+    }
 
     useEffect(() => {
-        const loadWeightDetail = async (type) => {
-            let res = await Api.get(endpoints['SreachMonthYear'](year, month, type));
-            setWeight(res.data);
-        }
-
         loadWeightDetail(type);
-    }, [year, month, type])
+    }, [nam, thang, ngay, type, scaleId])
 
-    // link đến phiếu cân chi tiết
     const goToWeightDetail = (weightId) => {
         navigation.navigate("WeightDetail", { "weightId": weightId })
     }
 
-    // hàm phân cách hàng ngàn với hàng đơn vị 
     const formatCurrency = (value) => {
         // Lấy phần nguyên của giá trị
         const intValue = parseInt(value);
@@ -44,8 +50,19 @@ export default SearchMonthYear = ({ route, navigation }) => {
             data.sort((a, b) => b.phieuCan.MaPhieu.localeCompare(a.phieuCan.MaPhieu));
             setStateSort(true)
         }
-
         return data;
+    };
+
+    // tính tổng trọng lượng
+    const TotalWeight = (item) => {
+        let totalWeight = 0;
+        let countWeight = 0;
+
+        item.forEach((items) => {
+            totalWeight += items.phieuCan.TLHang;
+            countWeight += 1;
+        });
+        return { totalWeight, countWeight };
     };
 
     //  hàm hiện thị nút đang hoạt động (tô màu nút đã chọn)
@@ -66,12 +83,12 @@ export default SearchMonthYear = ({ route, navigation }) => {
                 <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 10, marginBottom: 2 }}>
                     <View style={styles.TitleTotal}>
                         <Text style={{ fontSize: 17, fontWeight: '700', textAlign: 'center' }}>Tổng phiếu</Text>
-                        <Text style={{ fontSize: 28, fontWeight: '700', textAlign: 'center', color: 'red' }}>{weight.TongSoPhieu}</Text>
+                        <Text style={{ fontSize: 28, fontWeight: '700', textAlign: 'center', color: 'red' }}>{TotalWeight(weight.PhieuCan).countWeight}</Text>
                     </View>
 
                     <View style={styles.TolalWeight}>
                         <Text style={{ fontSize: 17, fontWeight: '700', textAlign: 'center' }}>Tổng trọng lượng hàng</Text>
-                        <Text style={{ fontSize: 28, fontWeight: '700', textAlign: 'center', color: 'red' }}>{formatCurrency(weight.TongHang)}</Text>
+                        <Text style={{ fontSize: 28, fontWeight: '700', textAlign: 'center', color: 'red' }}>{formatCurrency(TotalWeight(weight.PhieuCan).totalWeight)}</Text>
                     </View>
                 </View>
 
@@ -81,11 +98,11 @@ export default SearchMonthYear = ({ route, navigation }) => {
                             <Text style={{ marginRight: 5, textAlign: 'center', fontSize: 15 }}>Tất cả</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={[styles.ItemSreach, style = { width: '25%' },  selectedOption === 'option2' && styles.selectedItem,]} onPress={() => handleOptionSelect('option2')}>
+                        <TouchableOpacity style={[styles.ItemSreach, style = { width: '25%' }, selectedOption === 'option2' && styles.selectedItem,]} onPress={() => handleOptionSelect('option2')}>
                             <Text style={{ marginRight: 5, textAlign: 'center', fontSize: 15 }}>Nhập hàng</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={[styles.ItemSreach, style = { width: '24%' },  selectedOption === 'option3' && styles.selectedItem,]} onPress={() => handleOptionSelect('option3')}>
+                        <TouchableOpacity style={[styles.ItemSreach, style = { width: '24%' }, selectedOption === 'option3' && styles.selectedItem,]} onPress={() => handleOptionSelect('option3')}>
                             <Text style={{ marginRight: 5, textAlign: 'center', fontSize: 15 }}>Xuất hàng</Text>
                         </TouchableOpacity>
 
@@ -137,8 +154,6 @@ export default SearchMonthYear = ({ route, navigation }) => {
                     </View>
                 ))
                 )}
-
-
             </>}
         </ScrollView>
     )
