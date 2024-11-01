@@ -27,6 +27,8 @@ export default Register = ({ navigation }) => {
     const [err, setErr] = useState(false);
     const [loading, setLoading] = useState(false);
 
+    const [buttonColor, setButtonColor] = useState('blue'); // Màu mặc định
+
     const [formData, setFormData] = useState({
         first_name: "",
         company: "",
@@ -103,9 +105,40 @@ export default Register = ({ navigation }) => {
             if (formData.username) {
                 console.log(formData)
 
+                // Kiểm tra xem tên đăng nhập có khoảng trắng không
+                if (/\s/.test(formData.username)) {
+                    Alert.alert(
+                        'Thông báo',
+                        'Tên đăng nhập phải dính liền, không có khoảng cách !!!',
+                        [{ text: 'OK', onPress: () => console.log('OK pressed') }],
+                        { cancelable: false }
+                    );
+                    setLoading(false)
+                    return; // Dừng hàm nếu có khoảng trắng
+                }
+
+                // Kiểm tra tên đăng nhập trước khi đăng ký
+                const usernameCheckResponse = await Api.post(endpoints[`check-username`], {
+                    username: formData.username
+                });
+
+                if (usernameCheckResponse.data.exists) {
+                    Alert.alert(
+                        'Thông báo',
+                        'Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác.',
+
+                        [{ text: 'OK', onPress: () => console.log('OK pressed') }],
+                        { cancelable: false }
+                    );
+                    setLoading(false)
+                    return; // Dừng hàm nếu tên đăng nhập đã tồn tại
+                }
+
+                //  Nếu tên đăng nhập hợp lệ, tiến hành đăng ký
                 await Api.post(endpoints[`register`], formData, {
                     headers: {
-                        'Content-Type': 'application/json', 'charset': 'utf-8'
+                        'Content-Type': 'application/json',
+                        'charset': 'utf-8'
                     }
                 });
 
@@ -152,10 +185,10 @@ export default Register = ({ navigation }) => {
                     }
 
                     <View style={{ ...styles.inputView, borderWidth: isValidFirstName ? 1 : 0, borderColor: isValidFirstName ? 'red' : '' }}>
-                        <AntDesign name="user" size={24} color="#fff" style={styles.icon} />
+                        <AntDesign name="user" size={22} color="#fff" style={styles.icon} />
                         <TextInput
                             style={styles.inputText}
-                            placeholder="Họ tên người dùng"
+                            placeholder="Họ tên người dùng ..."
                             placeholderTextColor="#fff"
                             value={formData.first_name}
                             onChangeText={(text) => handleChangeInfo('first_name', text)}
@@ -176,10 +209,10 @@ export default Register = ({ navigation }) => {
                     }
 
                     <View style={{ ...styles.inputView, borderWidth: isValidCompany ? 1 : 0, borderColor: isValidCompany ? 'red' : '' }}>
-                        <AntDesign name="home" size={24} color="#fff" style={styles.icon} />
+                        <AntDesign name="home" size={22} color="#fff" style={styles.icon} />
                         <TextInput
                             style={styles.inputText}
-                            placeholder="Tên doanh nghiệp"
+                            placeholder="Tên doanh nghiệp ..."
                             placeholderTextColor="#fff"
                             value={formData.company}
                             onChangeText={(text) => handleChangeInfo('company', text)}
@@ -199,10 +232,10 @@ export default Register = ({ navigation }) => {
                             : <></>
                     }
                     <View style={{ ...styles.inputView, borderWidth: isValidPhone ? 1 : 0, borderColor: isValidPhone ? 'red' : '' }}>
-                        <AntDesign name="phone" size={24} color="#fff" style={styles.icon} />
+                        <AntDesign name="phone" size={22} color="#fff" style={styles.icon} />
                         <TextInput
                             style={styles.inputText}
-                            placeholder="Số điện thoại"
+                            placeholder="Số điện thoại ..."
                             placeholderTextColor="#fff"
                             keyboardType="numeric"
                             value={formData.phone}
@@ -224,7 +257,7 @@ export default Register = ({ navigation }) => {
                     }
 
                     <View style={{ ...styles.inputView, borderWidth: isValidUsername ? 1 : 0, borderColor: isValidUsername ? 'red' : '' }}>
-                        <AntDesign name="user" size={24} color="#fff" style={styles.icon} />
+                        <AntDesign name="user" size={22} color="#fff" style={styles.icon} />
                         <TextInput
                             style={styles.inputText}
                             placeholder="Tên đăng nhập"
@@ -238,18 +271,18 @@ export default Register = ({ navigation }) => {
                     {/* password */}
                     {isValidPassword ?
                         <View style={styles.messageErr}>
-                            <MaterialIcons name="error-outline" size={15} color="red" />
+                            <MaterialIcons name="error-outline" size={14} color="red" />
                             <Text style={styles.err}> Điền mật khẩu của bạn</Text>
                         </View> : err ?
                             <View style={styles.messageErr}>
-                                <MaterialIcons name="error-outline" size={15} color="red" />
+                                <MaterialIcons name="error-outline" size={14} color="red" />
                                 <Text style={styles.err}> Đang xảy ra lỗi</Text>
                             </View>
                             : <></>
                     }
 
                     <View style={[styles.inputView, styles.inputBorder, { borderWidth: isValidPassword ? 1 : 0, borderColor: isValidPassword ? 'red' : '' }]}>
-                        <AntDesign name="lock" size={24} color="#fff" style={styles.icon} />
+                        <AntDesign name="lock" size={22} color="#fff" style={styles.icon} />
                         <TextInput
                             style={styles.inputText}
                             placeholder="Mật khẩu"
@@ -259,32 +292,32 @@ export default Register = ({ navigation }) => {
                             value={formData.password}
                         />
                         <TouchableOpacity style={styles.checkboxContainer} onPress={() => setShowPassword(!showPassword)}>
-                            <Text style={styles.checkboxText}>{showPassword ? <Entypo name="eye-with-line" size={24} color="#fff" /> :
-                                <Entypo name="eye" size={24} color="#fff" />}</Text>
+                            <Text style={styles.checkboxText}>{showPassword ? <Entypo name="eye-with-line" size={22} color="#fff" /> :
+                                <Entypo name="eye" size={22} color="#fff" />}</Text>
                         </TouchableOpacity>
                     </View>
 
                     {/* xac nhan password */}
                     {stateConfirm &&
                         <View style={styles.messageErr}>
-                            <MaterialIcons name="error-outline" size={15} color="red" />
+                            <MaterialIcons name="error-outline" size={14} color="red" />
                             <Text style={styles.err}> Mật khẩu không trùng khớp</Text>
                         </View>
                     }
 
                     <View style={[styles.inputView, styles.inputBorder, { borderWidth: stateConfirm ? 1 : 0, borderColor: stateConfirm ? 'red' : '' }]}>
-                        <AntDesign name="lock" size={24} color="#fff" style={styles.icon} />
+                        <AntDesign name="lock" size={22} color="#fff" style={styles.icon} />
                         <TextInput
                             style={styles.inputText}
                             placeholder="Nhập lại mật khẩu"
                             placeholderTextColor="#fff"
-                            secureTextEntry={!showPassword}
+                            secureTextEntry={!showConfirmPassword}
                             value={passwordConfirm}
                             onChangeText={(text) => setPasswordConfirm(text)}
                         />
                         <TouchableOpacity style={styles.checkboxContainer} onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-                            <Text style={styles.checkboxText}>{showConfirmPassword ? <Entypo name="eye-with-line" size={24} color="#fff" /> :
-                                <Entypo name="eye" size={24} color="#fff" />}</Text>
+                            <Text style={styles.checkboxText}>{showConfirmPassword ? <Entypo name="eye-with-line" size={22} color="#fff" /> :
+                                <Entypo name="eye" size={22} color="#fff" />}</Text>
                         </TouchableOpacity>
                     </View>
 
@@ -310,33 +343,32 @@ const styles = StyleSheet.create({
         width: '88%',
         borderWidth: 2,
         borderRadius: 25,
-        padding: 20,
         backgroundColor: 'rgba(255, 255, 255, 0.2)',
         paddingHorizontal: 20,
-        paddingTop: 40,
+        paddingVertical: 20,
         borderColor: '#fff',
         borderStyle: 'solid',
     },
     title: {
-        fontSize: 28,
+        fontSize: 24,
         color: '#fff',
         textAlign: 'center',
-        marginBottom: 20,
+        marginBottom: 15,
     },
     inputView: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: 'rgba(255, 255, 255, 0.3)',
         borderRadius: 25,
-        height: 50,
-        marginBottom: 20,
+        height: 45,
+        marginBottom: 15,
         paddingHorizontal: 20,
     },
     inputText: {
         flex: 1,
-        height: 50,
+        height: 45,
         color: '#fff',
-        fontSize: 17
+        fontSize: 15
     },
     avatarButton: {
         backgroundColor: '#fff',
@@ -353,19 +385,20 @@ const styles = StyleSheet.create({
     registerButton: {
         backgroundColor: '#fff',
         borderRadius: 25,
-        height: 50,
+        height: 40,
         alignItems: 'center',
         justifyContent: 'center',
     },
     registerButtonText: {
         color: '#764ba2',
-        fontSize: 18,
+        fontSize: 16,
     },
     icon: {
         marginRight: 10,
     },
     messageErr: {
-        padding: 8,
+        paddingBottom: 4,
+        paddingLeft: 10,
         alignItems: "center",
         flexDirection: 'row',
         width: '75%',
@@ -373,7 +406,7 @@ const styles = StyleSheet.create({
     },
     err: {
         color: '#FF0000',
-        fontSize: 15
+        fontSize: 14
     },
 });
 

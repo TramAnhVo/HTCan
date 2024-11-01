@@ -1,11 +1,11 @@
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import ComboxCategory from '../components/ComboxCategory';
-import ComboxItem from '../components/ComboxItem';
-import ComboxMonth from '../components/ComboxMonth';
 import DatePickers from '../components/DatePickers';
 import FromDate from '../components/FromDate';
+import ExportExcel from './ExportExcel';
+import FromDateCustomer from './FromDateCustomer';
+import FromDateProduct from './FromDateProduct';
 
 export default RadioButton = () => {
     const [selectedOption, setSelectedOption] = useState(null);
@@ -23,92 +23,81 @@ export default RadioButton = () => {
 
     return (
         <View style={{ flexDirection: 'column', marginTop: 10 }}>
-            {/* chọn tháng năm */}
+            {/* chọn khách hàng */}
             <TouchableOpacity onPress={() => handleOptionSelect('option1')} style={styles.Item}>
-                <Text style={{ fontSize: 17, marginRight: 8 }}>Chọn tháng năm</Text>
+                <Text style={{ fontSize: 14, marginRight: 8 }}>Tìm kiếm theo khách hàng</Text>
                 {selectedOption === 'option1' ? (
-                    <MaterialCommunityIcons name="circle-slice-8" size={24} color="black" />
+                    <MaterialCommunityIcons name="circle-slice-8" size={18} color="black" />
                 ) : (
-                    <FontAwesome name="circle-o" size={24} color="black" />
+                    <FontAwesome name="circle-o" size={18} color="black" />
                 )}
             </TouchableOpacity>
             {selectedOption === 'option1' && !isHidden && (
-                <View style={[styles.ItemBackground, style = { height: 140 }]}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <ComboxMonth />
-                    </View>
+                <View style={[styles.ItemBackground, style = { height: 310 }]}>
+                    <FromDateCustomer />
                 </View>
             )}
 
-            {/* chọn mốc thời gian */}
+            {/* chọn hàng hóa */}
             <TouchableOpacity onPress={() => handleOptionSelect('option2')} style={styles.Item}>
-                <Text style={{ fontSize: 17, marginRight: 8 }}>Chọn mốc thời gian</Text>
+                <Text style={{ fontSize: 14, marginRight: 8 }}>Tìm kiếm theo hàng hóa</Text>
                 {selectedOption === 'option2' ? (
-                    <MaterialCommunityIcons name="circle-slice-8" size={24} color="black" />
+                    <MaterialCommunityIcons name="circle-slice-8" size={18} color="black" />
                 ) : (
-                    <FontAwesome name="circle-o" size={24} color="black" />
+                    <FontAwesome name="circle-o" size={18} color="black" />
                 )}
             </TouchableOpacity>
             {selectedOption === 'option2' && !isHidden && (
-                <View style={[styles.ItemBackground, style = { height: 100 }]}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 17 }}>Mốc thời gian:</Text>
-                        <ComboxItem />
-                    </View>
+                <View style={[styles.ItemBackground, style = { height: 310 }]}>
+                    <FromDateProduct />
                 </View>
             )}
 
             {/* chọn ngày cụ thể */}
             <TouchableOpacity onPress={() => handleOptionSelect('option3')} style={styles.Item}>
-                <Text style={{ fontSize: 17, marginRight: 8 }}>Chọn ngày cụ thể</Text>
+                <Text style={{ fontSize: 14, marginRight: 8 }}>Tìm kiếm theo ngày cụ thể</Text>
                 {selectedOption === 'option3' ? (
-                    <MaterialCommunityIcons name="circle-slice-8" size={24} color="black" />
+                    <MaterialCommunityIcons name="circle-slice-8" size={18} color="black" />
                 ) : (
-                    <FontAwesome name="circle-o" size={24} color="black" />
+                    <FontAwesome name="circle-o" size={18} color="black" />
                 )}
             </TouchableOpacity>
             {selectedOption === 'option3' && !isHidden && (
                 <View style={[styles.ItemBackground, style = { height: 60 }]}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 17, marginRight: 10 }}>Chọn ngày cần xem:</Text>
+                        <Text style={{ fontSize: 15, marginRight: 10 }}>Chọn ngày cần xem:</Text>
                         <DatePickers />
                     </View>
                 </View>
-
             )}
 
-            {/* chọn ngày đến ngày */}
-            <TouchableOpacity onPress={() => handleOptionSelect('option5')} style={styles.Item}>
-                <Text style={{ fontSize: 17, marginRight: 8 }}>Chọn từ ngày đến ngày</Text>
-                {selectedOption === 'option5' ? (
-                    <MaterialCommunityIcons name="circle-slice-8" size={24} color="black" />
+            {/* chọn ngày đến ngày khác */}
+            <TouchableOpacity onPress={() => handleOptionSelect('option6')} style={styles.Item}>
+                <Text style={{ fontSize: 14, marginRight: 8 }}>Tìm kiếm tổng hợp</Text>
+                {selectedOption === 'option6' ? (
+                    <MaterialCommunityIcons name="circle-slice-8" size={18} color="black" />
                 ) : (
-                    <FontAwesome name="circle-o" size={24} color="black" />
+                    <FontAwesome name="circle-o" size={18} color="black" />
                 )}
             </TouchableOpacity>
-            {selectedOption === 'option5' && !isHidden && (
-                <View style={[styles.ItemBackground, style = { height: 130 }]}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <FromDate />
-                    </View>
+            {selectedOption === 'option6' && !isHidden && (
+                <View style={[styles.ItemBackground, style = { height: 350 }]}>
+                    <FromDate />
                 </View>
             )}
 
-            {/* chọn loại phiếu */}
-            <TouchableOpacity onPress={() => handleOptionSelect('option4')} style={styles.Item}>
-                <Text style={{ fontSize: 17, marginRight: 8 }}>Chọn loại phiếu cân</Text>
-                {selectedOption === 'option4' ? (
-                    <MaterialCommunityIcons name="circle-slice-8" size={24} color="black" />
+            {/* xuất file excel */}
+            <TouchableOpacity onPress={() => handleOptionSelect('option7')} style={styles.Item}>
+                <Text style={{ fontSize: 14, marginRight: 8 }}>Xuất và chia sẻ File Excel</Text>
+                {selectedOption === 'option7' ? (
+                    <MaterialCommunityIcons name="circle-slice-8" size={18} color="black" />
                 ) : (
-                    <FontAwesome name="circle-o" size={24} color="black" />
+                    <FontAwesome name="circle-o" size={18} color="black" />
                 )}
             </TouchableOpacity>
-            {selectedOption === 'option4' && !isHidden && (
-                <View style={[styles.ItemBackground, style = { height: 100 }]}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 17 }}>Mốc loại phiếu cân:</Text>
-                        <ComboxCategory />
-                    </View>
+            {selectedOption === 'option7' && !isHidden && (
+                <View style={[styles.ItemBackground, style = { height: 320 }]}>
+                    <ExportExcel />
                 </View>
             )}
         </View>

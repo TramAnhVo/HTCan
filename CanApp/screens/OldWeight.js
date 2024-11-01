@@ -1,7 +1,6 @@
-import { AntDesign } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import React, { useState } from "react";
-import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import RadioButton from '../components/RadioButton';
 
 export default OldWeight = () => {
@@ -15,16 +14,16 @@ export default OldWeight = () => {
 
     return (
         <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', margin: 10 }}>
+            {/* <View style={{ flexDirection: 'row', alignItems: 'center', margin: 10 }}>
                 <TextInput style={styles.Input}
-                    placeholder="Tìm kiếm tên sản phảm hoặc tên khách hàng"
+                    placeholder="Tên sản phẩm hoặc tên khách hàng"
                     value={searchText}
                     onChangeText={setSearchText}
                 />
                 <TouchableOpacity onPress={handleSearch}>
                     <AntDesign name="search1" size={30} color="black" style={{ marginLeft: 5 }} />
                 </TouchableOpacity>
-            </View>
+            </View> */}
 
             <RadioButton />
         </View>

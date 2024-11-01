@@ -1,23 +1,24 @@
-import calendar
-
-import pytz
-from django.shortcuts import render
 from rest_framework import viewsets, permissions, generics, status
 from rest_framework.decorators import action
 from rest_framework.parsers import JSONParser
 from rest_framework.views import Response
 from django.http import JsonResponse, HttpResponseRedirect
 from datetime import date, timedelta, datetime
-from django.db.models import Sum, Count, Q
-from django.utils import timezone
-from django.db.models.functions import ExtractWeek, TruncDate
+from django.db.models import Sum, Count, Case, When, F, Q
 
 from . import serializers
-from .models import User, Scale, Weight, Customer, Product
+from .models import User, Scale, Weight, Image
+from django.shortcuts import render
 
 
 def home(request):
     return render(request, 'layout/home.html')
+
+
+class ImageView(viewsets.ViewSet,
+                generics.ListAPIView):
+    queryset = Image.objects.all()
+    serializer_class = serializers.ImageSerializer
 
 
 class ScaleView(viewsets.ViewSet,
@@ -62,83 +63,76 @@ class UserView(viewsets.ViewSet,
         return Response(serializers.ScaleSerializer(users, many=True, context={'request': request}).data,
                         status=status.HTTP_200_OK)
 
-
-class ProductView(viewsets.ViewSet,
-                  generics.ListAPIView,
-                  generics.RetrieveAPIView):
-    queryset = Product.objects.all()
-    serializer_class = serializers.ProductSerializer
-
-
-class CustomerView(viewsets.ViewSet,
-                   generics.ListAPIView,
-                   generics.RetrieveAPIView):
-    queryset = Customer.objects.all()
-    serializer_class = serializers.CustomerSerializer
+    # kiem tra ten dang nhap
+    def check_username(self, request):
+        username = request.data.get('username')
+        if User.objects.filter(username=username).exists():
+            return Response({'exists': True}, status=status.HTTP_200_OK)
+        return Response({'exists': False}, status=status.HTTP_200_OK)
 
 
 class WeightView(viewsets.ViewSet,
                  generics.CreateAPIView,
+                 # generics.DestroyAPIView,
                  generics.ListAPIView,
                  generics.RetrieveAPIView):
     queryset = Weight.objects.all()
     serializer_class = serializers.WeightSerializer
 
-    # tim kiem theo ten khách hàng hoặc tên sản phẩm
-    def get_queryset(self):
-        queries = self.queryset
+    # post phieu can ( mới => tạo mới, trùng => update)
+    def create(self, request, *args, **kwargs):
+        ticket_num = request.data.get('Ticketnum')
 
-        keyword = self.request.query_params.get("keyword", "")
+        if ticket_num is None:
+            return Response({"error": "Mã phiếu không được cung cấp."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if keyword:
-            queries = queries.filter(Q(ProdName__icontains=keyword) | Q(CustName__icontains=keyword))
+        # Kiểm tra xem phiếu cân đã tồn tại chưa
+        ticket, created = Weight.objects.get_or_create(Ticketnum=ticket_num)
 
-        filter_type = self.request.query_params.get("type", "")
+        # Cập nhật thông tin nếu đã tồn tại
+        serializer = self.get_serializer(ticket, data=request.data, partial=False)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
-        if filter_type:
-            if filter_type == "in":
-                queries = queries.filter(Trantype="Nhập hàng")
-            elif filter_type == "out":
-                queries = queries.filter(Trantype="Xuất hàng")
-            # Nếu người dùng không chọn in hoặc out, thì giữ nguyên kết quả từ khóa
-            else:
-                pass
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        return queries
+    def weight_user(self, request, canId):
+        weight_list = Weight.objects.filter(CanId_id=canId).all()
+        serializer = serializers.WeightSerializer(weight_list, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     #  tim kiem theo 1 ngay cu the
-    def count_weight_of_day(self, request, year, month, day, type):
+    def count_weight_of_day(self, request, year, month, day, canId):
         date_weight = datetime(year, month, day).date()
 
-        if type == 1:
-            weight_list = Weight.objects.filter(date_time__date=date_weight, Trantype="Nhập hàng").all()
-            sum_Netweight = Weight.objects.filter(date_time__date=date_weight, Trantype="Nhập hàng").aggregate(sum=Sum('Netweight'))[ 'sum']
-        elif type == 2:
-            weight_list = Weight.objects.filter(date_time__date=date_weight, Trantype="Xuất hàng").all()
-            sum_Netweight = Weight.objects.filter(date_time__date=date_weight, Trantype="Xuất hàng").aggregate(sum=Sum('Netweight'))['sum']
-        else:
-            weight_list = Weight.objects.filter(date_time__date=date_weight).all()
-            sum_Netweight = Weight.objects.filter(date_time__date=date_weight).aggregate(sum=Sum('Netweight'))['sum']
+        weight_list = Weight.objects.filter(date_time__date=date_weight, CanId_id=canId).all()
 
-        if sum_Netweight is None:
-            sum_Netweight = 0
-
-        data = {
-            "NgayTimKiem": date_weight,
-            "TongHang": sum_Netweight,
-            "TongSoPhieu": len(weight_list),
-            "PhieuCan": []
-        }
-
-        for index, weight in enumerate(weight_list, start=1):
-            weight_data = {
-                "STT": index,
+        data = []
+        for weight in weight_list:
+            data.append({
                 "key": weight.id,
-                "MaPhieu": weight.Ticketnum,
-                "TLHang": weight.Netweight,
-                "NgayTaoPhieu": weight.date_time,
-            }
-            data["PhieuCan"].append({"phieuCan": weight_data})
+                "Ticketnum": weight.Ticketnum,
+                "Docnum": weight.Docnum,
+                "Truckno": weight.Truckno,
+                "Date_in": weight.Date_in,
+                "Date_out": weight.Date_out,
+
+                "Firstweight": weight.Firstweight,
+                "Secondweight": weight.Secondweight,
+                "Netweight": weight.Netweight,
+                "Trantype": weight.Trantype,
+
+                "ProdCode": weight.ProdCode,
+                "ProdName": weight.ProdName,
+                "CustCode": weight.CustCode,
+                "CustName": weight.CustName,
+
+                "time_in": weight.time_in,
+                "time_out": weight.time_out,
+                "date_time": weight.date_time,
+                "Note": weight.Note
+            })
 
         return JsonResponse(data, safe=False)
 
@@ -147,41 +141,86 @@ class WeightView(viewsets.ViewSet,
         current_year = datetime.now().year
         data = []
         for month in range(1, 13):
-            result = Weight.objects.filter(date_time__year=current_year, date_time__month=month,CanId_id=canId).aggregate(count=Count('id'))
-            result1 = Weight.objects.filter(date_time__year=current_year, date_time__month=month, CanId_id=canId).aggregate(total_weight=Sum('Netweight'))['total_weight']
+            count = Weight.objects.filter(date_time__year=current_year, date_time__month=month, CanId_id=canId).all()
+            sum = Weight.objects.filter(date_time__year=current_year, date_time__month=month, CanId_id=canId).aggregate(
+                total_weight=Sum('Netweight'))['total_weight']
 
-            count = result['count'] or 0
-            total_weight = result1 or 0
-            data.append({'month': month, 'count': count, 'sum': total_weight})
+            if sum is None: sum = 0
+
+            data.append({
+                'month': month,
+                'count': len(count),
+                'sum': sum
+            })
 
         return JsonResponse(data, safe=False)
 
     # chi tiet phieu can trong 1 thang
-    def weight_detail_month(self, request, month, type, canId):
+    def weight_detail_month(self, request, month, canId):
         current_year = datetime.now().year
+        weight_list = Weight.objects.filter(date_time__year=current_year, date_time__month=month, CanId_id=canId)
 
-        if type == 1:
-            weight_list = Weight.objects.filter(date_time__year=current_year, date_time__month=month,Trantype="Nhập hàng", CanId_id=canId)
-        elif type == 2:
-            weight_list = Weight.objects.filter(date_time__year=current_year, date_time__month=month,Trantype="Xuất hàng", CanId_id=canId)
-        else:
-            weight_list = Weight.objects.filter(date_time__year=current_year, date_time__month=month, CanId_id=canId)
-
-        data = {
-            "ThangTimKiem": month,
-            "PhieuCan": []
-        }
-
+        data = []
         for index, weight in enumerate(weight_list, start=1):
             weight_data = {
                 "STT": index,
                 "key": weight.id,
-                "MaPhieu": weight.Ticketnum,
-                "TLHang": weight.Netweight,
-                "NgayTaoPhieu": weight.date_time,
-            }
-            data["PhieuCan"].append({"phieuCan": weight_data})
+                "Ticketnum": weight.Ticketnum,
+                "Docnum": weight.Docnum,
+                "Truckno": weight.Truckno,
+                "Date_in": weight.Date_in,
+                "Date_out": weight.Date_out,
 
+                "Firstweight": weight.Firstweight,
+                "Secondweight": weight.Secondweight,
+                "Netweight": weight.Netweight,
+                "Trantype": weight.Trantype,
+
+                "ProdCode": weight.ProdCode,
+                "ProdName": weight.ProdName,
+                "CustCode": weight.CustCode,
+                "CustName": weight.CustName,
+
+                "time_in": weight.time_in,
+                "time_out": weight.time_out,
+                "date_time": weight.date_time,
+                "Note": weight.Note
+            }
+            data.append(weight_data)
+
+        return JsonResponse(data, safe=False)
+
+    # thong ke theo nam
+    def weight_detail_year(self, request, year, canId):
+        weight_list = Weight.objects.filter(date_time__year=year,  CanId_id=canId)
+
+        data = []
+        for index, weight in enumerate(weight_list, start=1):
+            weight_data = {
+                "STT": index,
+                "key": weight.id,
+                "Ticketnum": weight.Ticketnum,
+                "Docnum": weight.Docnum,
+                "Truckno": weight.Truckno,
+                "Date_in": weight.Date_in,
+                "Date_out": weight.Date_out,
+
+                "Firstweight": weight.Firstweight,
+                "Secondweight": weight.Secondweight,
+                "Netweight": weight.Netweight,
+                "Trantype": weight.Trantype,
+
+                "ProdCode": weight.ProdCode,
+                "ProdName": weight.ProdName,
+                "CustCode": weight.CustCode,
+                "CustName": weight.CustName,
+
+                "time_in": weight.time_in,
+                "time_out": weight.time_out,
+                "date_time": weight.date_time,
+                "Note": weight.Note
+            }
+            data.append(weight_data)
         return JsonResponse(data, safe=False)
 
     def weight_detail_week(self, request, year, month, day, type, canId):
@@ -204,7 +243,7 @@ class WeightView(viewsets.ViewSet,
                 "key": weight.id,
                 "MaPhieu": weight.Ticketnum,
                 "TLHang": weight.Netweight,
-                "NgayTaoPhieu":weight.date_time,
+                "NgayTaoPhieu": weight.date_time,
                 "LoaiPhieu": weight.Trantype
             }
             data["PhieuCan"].append({"phieuCan": weight_data})
@@ -225,8 +264,10 @@ class WeightView(viewsets.ViewSet,
         all_days = [start_of_week + timedelta(days=i) for i in range(7)]
 
         # Truy vấn tổng số phiếu từng ngày từ thứ 2 đến chủ nhật trong tuần
-        result = Weight.objects.filter(date_time__gte=start_of_week, CanId_id=canId).values('date_time__date').annotate(count=Count('id'))
-        result1 = Weight.objects.filter(date_time__gte=start_of_week, CanId_id=canId).values('date_time__date').annotate(total_weight=Sum('Netweight'))
+        result = Weight.objects.filter(date_time__gte=start_of_week, CanId_id=canId).values('date_time__date').annotate(
+            count=Count('id'))
+        result1 = Weight.objects.filter(date_time__gte=start_of_week, CanId_id=canId).values(
+            'date_time__date').annotate(total_weight=Sum('Netweight'))
 
         # Tạo một từ điển để lưu trữ số phiếu theo ngày
         count_by_date = {item['date_time__date']: item['count'] for item in result}
@@ -242,159 +283,622 @@ class WeightView(viewsets.ViewSet,
 
         return JsonResponse(data, safe=False)
 
-    # tim kiem cac phieu can theo nam thang
-    def count_weight_Month_Year(self, request, year, month, type):
-        start_date = datetime(year, month, 1)
-
-        if month == 12:
-            end_date = datetime(year + 1, 1, 1)
-        else:
-            end_date = datetime(year, month + 1, 1)
-        end_date -= timedelta(days=1)
-
-        if type == 1:
-            weight_list = Weight.objects.filter(date_time__gte=start_date, date_time__lt=end_date, Trantype="Nhập hàng")
-            sum_weight = Weight.objects.filter(date_time__year=year, date_time__month=month, Trantype="Nhập hàng").aggregate(total_weight=Sum('Netweight'))['total_weight']
-        elif type == 2:
-            weight_list = Weight.objects.filter(date_time__gte=start_date, date_time__lt=end_date, Trantype="Xuất hàng")
-            sum_weight = Weight.objects.filter(date_time__year=year, date_time__month=month, Trantype="Xuất hàng").aggregate(total_weight=Sum('Netweight'))['total_weight']
-        else:
-            weight_list = Weight.objects.filter(date_time__gte=start_date, date_time__lt=end_date)
-            sum_weight = Weight.objects.filter(date_time__year=year, date_time__month=month).aggregate(total_weight=Sum('Netweight'))['total_weight']
-
-        TongHang = sum_weight or 0
-
-        data = {
-            "ThangTimKiem": month,
-            "TongHang": TongHang,
-            "TongSoPhieu": len(weight_list),
-            "PhieuCan": []
-        }
-
-        for index, weight in enumerate(weight_list, start=1):
-            weight_data = {
-                "STT": index,
-                "key": weight.id,
-                "MaPhieu": weight.Ticketnum,
-                "TLHang": weight.Netweight,
-                "NgayTaoPhieu": weight.date_time,
-            }
-            data["PhieuCan"].append({"phieuCan": weight_data})
-
-        return JsonResponse(data, safe=False)
-
-    # tim kiem cac phieu can tu ngay den ngay hien tai
-    def count_weight_For_Time(self, request, time, type):
-        today = datetime.now().date()
-        start_date = today - timedelta(days=time)
-        end_date = today
-
-        if type == 1:
-            weight_list = Weight.objects.filter(date_time__date__gte=start_date, date_time__date__lte=end_date,
-                                                Trantype="Nhập hàng").all()
-            sum_TLHang = Weight.objects.filter(date_time__date__gte=start_date, date_time__date__lte=end_date,
-                                               Trantype="Nhập hàng").aggregate(sum=Sum('Netweight'))['sum']
-        elif type == 2:
-            weight_list = Weight.objects.filter(date_time__date__gte=start_date, date_time__date__lte=end_date,
-                                                Trantype="Xuất hàng").all()
-            sum_TLHang = Weight.objects.filter(date_time__date__gte=start_date, date_time__date__lte=end_date,
-                                               Trantype="Xuất hàng").aggregate(sum=Sum('Netweight'))['sum']
-        else:
-            weight_list = Weight.objects.filter(date_time__date__gte=start_date, date_time__date__lte=end_date).all()
-            sum_TLHang = Weight.objects.filter(date_time__date__gte=start_date, date_time__date__lte=end_date).aggregate(
-                sum=Sum('Netweight'))['sum']
-
-        if sum_TLHang is None:
-            sum_TLHang = 0
-
-        data = {
-            "NgayTimKiem": {
-                "start": start_date,
-                "end": end_date
-            },
-            "TongHang": sum_TLHang,
-            "TongSoPhieu": len(weight_list),
-            "PhieuCan": []
-        }
-
-        for index, weight in enumerate(weight_list, start=1):
-            weight_data = {
-                "STT": index,
-                "key": weight.id,
-                "MaPhieu": weight.Ticketnum,
-                "TLHang": weight.Netweight,
-                "NgayTaoPhieu": weight.date_time,
-            }
-            data["PhieuCan"].append({"phieuCan": weight_data})
-
-        return JsonResponse(data, safe=False)
-
-    # tim kiem theo loai phieu
-    def count_weight_category(self, request, num):
-        if num == 1:
-            weight_list = Weight.objects.filter(Trantype__iexact='Nhập hàng'.title())
-            sum_TLHang = Weight.objects.filter(Trantype__iexact='Nhập hàng'.title()).aggregate(sum=Sum('Netweight'))['sum']
-            category = 'Nhập hàng'
-        else:
-            weight_list = Weight.objects.filter(Trantype__iexact='Xuất hàng'.title())
-            sum_TLHang = Weight.objects.filter(Trantype__iexact='Xuất hàng'.title()).aggregate(sum=Sum('Netweight'))['sum']
-            category = 'Xuất hàng'
-
-        data = {
-            "LoaiPhieuCan": category,
-            "TongHang": sum_TLHang,
-            "TongSoPhieu": len(weight_list),
-            "PhieuCan": []
-        }
-
-        for index, weight in enumerate(weight_list, start=1):
-            weight_data = {
-                "STT": index,
-                "key": weight.id,
-                "MaPhieu": weight.Ticketnum,
-                "TLHang": weight.Netweight,
-                "NgayTaoPhieu": weight.date_time
-            }
-            data["PhieuCan"].append({"phieuCan": weight_data})
-
-        return JsonResponse(data, safe=False)
-
     # tim kiem tu ngay den ngay
-    def count_weight_from_time(self, request, yearFrom, monthFrom, dayFrom, yearTo, monthTo, dayTo, type):
+    def count_weight_from_time(self, request, yearFrom, monthFrom, dayFrom, yearTo, monthTo, dayTo, canId):
         start_date = datetime(yearFrom, monthFrom, dayFrom).date()
         end_date = datetime(yearTo, monthTo, dayTo).date()
 
-        if type == 1:
-            weight_list = Weight.objects.filter(date_time__date__gte=start_date, date_time__date__lte=end_date,
-                                                Trantype="Nhập hàng").all()
-            sum_TLHang = Weight.objects.filter(date_time__date__gte=start_date, date_time__date__lte=end_date,
-                                               Trantype="Nhập hàng").aggregate(sum=Sum('Netweight'))['sum']
-        elif type == 2:
-            weight_list = Weight.objects.filter(date_time__date__gte=start_date, date_time__date__lte=end_date,
-                                                Trantype="Xuất hàng").all()
-            sum_TLHang = Weight.objects.filter(date_time__date__gte=start_date, date_time__date__lte=end_date,
-                                               Trantype="Xuất hàng").aggregate(sum=Sum('Netweight'))['sum']
-        else:
-            weight_list = Weight.objects.filter(date_time__date__gte=start_date, date_time__date__lte=end_date).all()
-            sum_TLHang = Weight.objects.filter(date_time__date__gte=start_date, date_time__date__lte=end_date).aggregate(
-                sum=Sum('Netweight'))['sum']
+        weight_list = Weight.objects.filter(date_time__date__range=(start_date, end_date), CanId_id=canId)
 
-        data = {
-            "TuNgay": start_date,
-            "DenNgay": end_date,
-            "TongSoPhieu": len(weight_list),
-            "TongHang": sum_TLHang,
-            "PhieuCan": []
-        }
+        data = []
 
         for index, weight in enumerate(weight_list, start=1):
             weight_data = {
                 "STT": index,
                 "key": weight.id,
-                "MaPhieu": weight.Ticketnum,
-                "TLHang": weight.Netweight,
-                "NgayTaoPhieu": weight.date_time,
+                "Ticketnum": weight.Ticketnum,
+                "Docnum": weight.Docnum,
+                "Truckno": weight.Truckno,
+                "Date_in": weight.Date_in,
+                "Date_out": weight.Date_out,
+
+                "Firstweight": weight.Firstweight,
+                "Secondweight": weight.Secondweight,
+                "Netweight": weight.Netweight,
+                "Trantype": weight.Trantype,
+
+                "ProdCode": weight.ProdCode,
+                "ProdName": weight.ProdName,
+                "CustCode": weight.CustCode,
+                "CustName": weight.CustName,
+
+                "time_in": weight.time_in,
+                "time_out": weight.time_out,
+                "date_time": weight.date_time,
+                "Note": weight.Note
             }
-            data["PhieuCan"].append({"phieuCan": weight_data})
+            data.append(weight_data)
 
         return JsonResponse(data, safe=False)
+
+    # bao cao thong ke tong quat theo thang
+    def general_month(self, request, month, canId):
+        current_year = datetime.now().year
+        count_weight = \
+            Weight.objects.filter(date_time__year=current_year, date_time__month=month, CanId_id=canId).aggregate(
+                count_weight=Count('Ticketnum'))['count_weight']
+        total_weight = \
+            Weight.objects.filter(date_time__year=current_year, date_time__month=month, CanId_id=canId).aggregate(
+                total_weight=Sum('Netweight'))['total_weight']
+
+        count_in_weight = Weight.objects.filter(date_time__year=current_year, date_time__month=month,
+                                                CanId_id=canId,Trantype='Nhập hàng').aggregate(
+            count_in_weight=Count('Ticketnum'))['count_in_weight']
+
+        total_in = Weight.objects.filter(date_time__year=current_year, date_time__month=month,
+                                         CanId_id=canId, Trantype='Nhập hàng').aggregate(total_in=Sum('Netweight'))[
+            'total_in']
+
+        count_out_weight = Weight.objects.filter(date_time__year=current_year, date_time__month=month,
+                                                CanId_id=canId, Trantype='Xuất hàng').aggregate(
+            count_out_weight=Count('Ticketnum'))['count_out_weight']
+
+        total_out = Weight.objects.filter(date_time__year=current_year, date_time__month=month,
+                                          CanId_id=canId, Trantype='Xuất hàng').aggregate(total_out=Sum('Netweight'))[
+            'total_out']
+
+        report_data = {
+            "Month": month,
+            "CountWeight": count_weight,
+            "TotalWeight": total_weight,
+            "CountIn": count_in_weight,
+            "TotalIn": total_in,
+            "CountOut": count_out_weight,
+            "TotalOut": total_out,
+            "days": []
+        }
+
+        weights = Weight.objects.filter(date_time__month=month, CanId_id=canId).values(
+            "Date_in",
+            "CustCode",
+            "CustName",
+            "ProdCode",
+            "ProdName",
+            "Netweight",
+            "Trantype"
+        ).order_by("Date_in")
+
+        current_date = None
+        current_day = None
+
+        for weight in weights:
+            date = weight["Date_in"]
+            cust_code = weight["CustCode"]
+            cust_name = weight["CustName"]
+            prod_code = weight["ProdCode"]
+            prod_name = weight["ProdName"]
+            total_weight = weight["Netweight"]
+            total_records = 1
+            total_import = 1 if weight["Trantype"] == "Nhập hàng" else 0
+            total_import_weight = total_weight if weight["Trantype"] == "Nhập hàng" else 0
+            total_export = 1 if weight["Trantype"] == "Xuất hàng" else 0
+            total_export_weight = total_weight if weight["Trantype"] == "Xuất hàng" else 0
+
+            if current_date != date:
+                current_date = date
+
+                total_records_day = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId).aggregate(
+                    total_records_day=Count("*"))
+                total_weight_day = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId).aggregate(
+                    total_weight_day=Sum("Netweight"))
+
+                count_in_day = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId,
+                                                     Trantype='Nhập hàng').aggregate(count_in_day=Count("*"))
+                count_out_day = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId,
+                                                      Trantype='Xuất hàng').aggregate(count_out_day=Count("*"))
+
+                total_in = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId,
+                                                  Trantype='Nhập hàng').aggregate(total_in=Sum("Netweight"))
+                total_out = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId,
+                                                 Trantype='Xuất hàng').aggregate(total_out=Sum("Netweight"))
+
+                current_day = {
+                    "code": date.strftime('%Y-%m-%d'),
+                    "total": total_weight_day["total_weight_day"],
+                    "count": total_records_day["total_records_day"],
+                    "phieuNhap": count_in_day["count_in_day"],
+                    "phieuXuat": count_out_day["count_out_day"],
+                    "totalOut": total_out["total_out"],
+                    "totalIn": total_in["total_in"],
+                    "customerGroups": []
+                }
+                report_data["days"].append(current_day)
+
+            customerGroups_found = False
+            for customerGroups in current_day["customerGroups"]:
+                if customerGroups["CustCode"] == cust_code:
+                    customerGroups["count"] += total_records
+                    customerGroups["sum"] += total_weight
+                    customerGroups["phieuNhap"] += total_import
+                    customerGroups["phieuXuat"] += total_export
+                    customerGroups["totalIn"] += total_import_weight
+                    customerGroups["totalOut"] += total_export_weight
+                    customerGroups_found = True
+                    break
+
+            if not customerGroups_found:
+                customerGroups = {
+                    "CustCode": cust_code,
+                    "name": cust_name,
+                    "count": total_records,
+                    "sum": total_weight,
+                    "phieuNhap": total_import,
+                    "phieuXuat": total_export,
+                    "totalIn": total_import_weight,
+                    "totalOut": total_export_weight,
+                    "productGroups": []
+                }
+                current_day["customerGroups"].append(customerGroups)
+
+            productGroups_found = False
+            for productGroups in customerGroups["productGroups"]:
+                if productGroups["ProdCode"] == prod_code:
+                    productGroups["sum"] += total_weight
+                    productGroups["count"] += total_records
+                    productGroups["phieuNhap"] += total_import
+                    productGroups["totalIn"] += total_import_weight
+                    productGroups["phieuXuat"] += total_export
+                    productGroups["totalOut"] += total_export_weight
+                    productGroups_found = True
+                    break
+
+            if not productGroups_found:
+                productGroups = {
+                    "ProdCode": prod_code,
+                    "name": prod_name,
+                    "sum": total_weight,
+                    "count": total_records,
+                    "phieuNhap": total_import,
+                    "totalIn": total_import_weight,
+                    "phieuXuat": total_export,
+                    "totalOut": total_export_weight
+                }
+                customerGroups["productGroups"].append(productGroups)
+
+        return JsonResponse(report_data)
+
+    # bao cao thong ke tong quat theo tuan
+    def general_week(self, request, canId):
+        data = []
+        # Lấy ngày bắt đầu và kết thúc của tuần hiện tại
+        today = datetime.now()
+        start_of_week = today - timedelta(days=today.weekday())
+        end_of_week = start_of_week + timedelta(days=6)
+
+        count_weight = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
+                                             CanId_id=canId).aggregate(count_weight=Count('Ticketnum'))['count_weight']
+        total_weight = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
+                                             CanId_id=canId).aggregate(total_weight=Sum('Netweight'))['total_weight']
+
+        count_out = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
+                                          CanId_id=canId, Trantype='Xuất hàng').aggregate(count_out=Count('Ticketnum'))['count_out']
+        total_out = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
+                                          CanId_id=canId, Trantype='Xuất hàng').aggregate(total_out=Sum('Netweight'))['total_out']
+
+        count_in = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
+                                         CanId_id=canId, Trantype='Nhập hàng').aggregate(count_in=Count('Ticketnum'))['count_in']
+        total_in = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
+                                         CanId_id=canId, Trantype='Nhập hàng').aggregate(total_in=Sum('Netweight'))['total_in']
+
+        report_data = {
+            "from": start_of_week.date(),
+            "end": end_of_week.date(),
+            "CountWeight": count_weight,
+            "TotalWeight": total_weight,
+            "count_out": count_out,
+            'total_out': total_out,
+            "count_in": count_in,
+            "total_in":total_in,
+            "days": []
+        }
+
+        weights = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),CanId_id=canId) \
+            .values(
+            "Date_in",
+            "CustCode",
+            "CustName",
+            "ProdCode",
+            "ProdName",
+            "Netweight",
+            "Trantype"
+        ).order_by("Date_in")
+
+        current_date = None
+        current_day = None
+
+        for weight in weights:
+            date = weight["Date_in"]
+            cust_code = weight["CustCode"]
+            cust_name = weight["CustName"]
+            prod_code = weight["ProdCode"]
+            prod_name = weight["ProdName"]
+            total_weight = weight["Netweight"]
+            total_records = 1
+
+            total_import = 1 if weight["Trantype"] == "Nhập hàng" else 0
+            total_import_weight = total_weight if weight["Trantype"] == "Nhập hàng" else 0
+
+            total_export = 1 if weight["Trantype"] == "Xuất hàng" else 0
+            total_export_weight = total_weight if weight["Trantype"] == "Xuất hàng" else 0
+
+            if current_date != date:
+                current_date = date
+
+                total_records_day = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId).aggregate(
+                    total_records_day=Count("*"))
+                total_weight_day = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId).aggregate(
+                    total_weight_day=Sum("Netweight"))
+
+                count_in_day = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId,
+                                                     Trantype='Nhập hàng').aggregate(count_in_day=Count("*"))
+                count_out_day = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId,
+                                                     Trantype='Xuất hàng').aggregate(count_out_day=Count("*"))
+
+                current_day = {
+                    "Date": date.strftime('%Y-%m-%d'),
+                    "total_day": total_weight_day["total_weight_day"],
+                    "count_day": total_records_day["total_records_day"],
+                    "count_in": count_in_day["count_in_day"],
+                    "count_out": count_out_day["count_out_day"],
+                    "customers": []
+                }
+                report_data["days"].append(current_day)
+
+            customer_found = False
+            for customer in current_day["customers"]:
+                if customer["CustCode"] == cust_code:
+                    customer["count"] += total_records
+                    customer["sum"] += total_weight
+                    customer["count_in"] += total_import
+                    customer["count_out"] += total_export
+                    customer_found = True
+                    break
+
+            if not customer_found:
+                customer = {
+                    "CustCode": cust_code,
+                    "CustName": cust_name,
+                    "count": total_records,
+                    "sum": total_weight,
+                    "count_in": total_import,
+                    "count_out": total_export,
+                    "products": []
+                }
+                current_day["customers"].append(customer)
+
+            product_found = False
+            for product in customer["products"]:
+                if product["ProdCode"] == prod_code:
+                    product["total_weight"] += total_weight
+                    product["total_records"] += total_records
+                    product["total_import"] += total_import
+                    product["total_import_weight"] += total_import_weight
+                    product["total_export"] += total_export
+                    product["total_export_weight"] += total_export_weight
+                    product_found = True
+                    break
+
+            if not product_found:
+                product = {
+                    "ProdCode": prod_code,
+                    "ProdName": prod_name,
+                    "total_weight": total_weight,
+                    "total_records": total_records,
+                    "total_import": total_import,
+                    "total_import_weight": total_import_weight,
+                    "total_export": total_export,
+                    "total_export_weight": total_export_weight
+                }
+                customer["products"].append(product)
+
+        return JsonResponse(report_data)
+
+    def general_from_date(self, request, yearFrom, monthFrom, dayFrom, yearTo, monthTo, dayTo, canId):
+        data = []
+        start_of_week = datetime(yearFrom, monthFrom, dayFrom)
+        end_of_week = datetime(yearTo, monthTo, dayTo)
+
+        count_weight = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
+                                             CanId_id=canId).aggregate(count_weight=Count('Ticketnum'))['count_weight']
+        total_weight = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
+                                             CanId_id=canId).aggregate(total_weight=Sum('Netweight'))['total_weight']
+
+        count_out = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
+                                          CanId_id=canId, Trantype='Xuất hàng').aggregate(count_out=Count('Ticketnum'))[
+            'count_out']
+        total_out = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
+                                          CanId_id=canId, Trantype='Xuất hàng').aggregate(total_out=Sum('Netweight'))[
+            'total_out']
+
+        count_in = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
+                                         CanId_id=canId, Trantype='Nhập hàng').aggregate(count_in=Count('Ticketnum'))[
+            'count_in']
+        total_in = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
+                                         CanId_id=canId, Trantype='Nhập hàng').aggregate(total_in=Sum('Netweight'))[
+            'total_in']
+
+        report_data = {
+            "from": start_of_week.date(),
+            "end": end_of_week.date(),
+            "CountWeight": count_weight,
+            "TotalWeight": total_weight,
+            "count_out": count_out,
+            'total_out': total_out,
+            "count_in": count_in,
+            "total_in": total_in,
+            "days": []
+        }
+
+        weights = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
+                                        CanId_id=canId) \
+            .values(
+            "Date_in",
+            "CustCode",
+            "CustName",
+            "ProdCode",
+            "ProdName",
+            "Netweight",
+            "Trantype"
+        ).order_by("Date_in")
+
+        current_date = None
+        current_day = None
+
+        for weight in weights:
+            date = weight["Date_in"]
+            cust_code = weight["CustCode"]
+            cust_name = weight["CustName"]
+            prod_code = weight["ProdCode"]
+            prod_name = weight["ProdName"]
+            total_weight = weight["Netweight"]
+            total_records = 1
+
+            total_import = 1 if weight["Trantype"] == "Nhập hàng" else 0
+            total_import_weight = total_weight if weight["Trantype"] == "Nhập hàng" else 0
+
+            total_export = 1 if weight["Trantype"] == "Xuất hàng" else 0
+            total_export_weight = total_weight if weight["Trantype"] == "Xuất hàng" else 0
+
+            if current_date != date:
+                current_date = date
+
+                total_records_day = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId).aggregate(
+                    total_records_day=Count("*"))
+                total_weight_day = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId).aggregate(
+                    total_weight_day=Sum("Netweight"))
+
+                count_in_day = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId,
+                                                     Trantype='Nhập hàng').aggregate(count_in_day=Count("*"))
+                count_out_day = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId,
+                                                      Trantype='Xuất hàng').aggregate(count_out_day=Count("*"))
+
+                current_day = {
+                    "code": date.strftime('%Y-%m-%d'),
+                    "total_day": total_weight_day["total_weight_day"],
+                    "count_day": total_records_day["total_records_day"],
+                    "count_in": count_in_day["count_in_day"],
+                    "count_out": count_out_day["count_out_day"],
+                    "customers": []
+                }
+                report_data["days"].append(current_day)
+
+            customer_found = False
+            for customer in current_day["customers"]:
+                if customer["CustCode"] == cust_code:
+                    customer["count"] += total_records
+                    customer["sum"] += total_weight
+                    customer["count_in"] += total_import
+                    customer["count_out"] += total_export
+                    customer["total_in"] += total_import_weight
+                    customer["total_out"] += total_export_weight
+                    customer_found = True
+                    break
+
+            if not customer_found:
+                customer = {
+                    "CustCode": cust_code,
+                    "CustName": cust_name,
+                    "count": total_records,
+                    "sum": total_weight,
+                    "count_in": total_import,
+                    "total_in": total_import_weight,
+                    "count_out": total_export,
+                    "total_out": total_export_weight,
+                    "products": []
+                }
+                current_day["customers"].append(customer)
+
+            product_found = False
+            for product in customer["products"]:
+                if product["ProdCode"] == prod_code:
+                    product["total_weight"] += total_weight
+                    product["total_records"] += total_records
+                    product["total_import"] += total_import
+                    product["total_import_weight"] += total_import_weight
+                    product["total_export"] += total_export
+                    product["total_export_weight"] += total_export_weight
+                    product_found = True
+                    break
+
+            if not product_found:
+                product = {
+                    "ProdCode": prod_code,
+                    "ProdName": prod_name,
+                    "total_weight": total_weight,
+                    "total_records": total_records,
+                    "total_import": total_import,
+                    "total_import_weight": total_import_weight,
+                    "total_export": total_export,
+                    "total_export_weight": total_export_weight
+                }
+                customer["products"].append(product)
+
+        return JsonResponse(report_data)
+
+    # bao cao thong ke theo ngay (nhom khach hang => nhom san pham)
+    def general_day(self, request, year, month, day, canId):
+        date_weight = datetime(year, month, day).date()
+
+        count_weight = Weight.objects.filter(date_time__date=date_weight, CanId_id=canId).aggregate(
+                                            count_weight=Count('Ticketnum'))['count_weight']
+        total_weight = Weight.objects.filter(date_time__date=date_weight,CanId_id=canId).aggregate(
+                                            total_weight=Sum('Netweight'))['total_weight']
+
+        count_weight_out = Weight.objects.filter(date_time__date=date_weight,CanId_id=canId, Trantype='Xuất hàng').aggregate(
+                                        count_weight_out=Count('Ticketnum'))['count_weight_out']
+        total_weight_out = Weight.objects.filter(date_time__date=date_weight,CanId_id=canId, Trantype='Xuất hàng').aggregate(
+                                        total_weight_out=Sum('Netweight'))['total_weight_out']
+
+        count_weight_in = Weight.objects.filter(date_time__date=date_weight,CanId_id=canId, Trantype='Nhập hàng').aggregate(
+                                        count_weight_in=Count('Ticketnum'))['count_weight_in']
+        total_weight_in = Weight.objects.filter(date_time__date=date_weight,CanId_id=canId, Trantype='Nhập hàng').aggregate(
+                                        total_weight_in=Sum('Netweight'))['total_weight_in']
+
+        weights = Weight.objects.filter(date_time__date=date_weight, CanId_id=canId).values(
+            "CustCode",
+            "CustName",
+            "ProdCode",
+            "ProdName",
+            "Netweight",
+            "Trantype"
+        ).order_by("CustCode", "ProdCode")
+
+        # Gom nhóm và tính tổng các mã khách hàng giống nhau
+        customer_data_list = []
+        customer_dict = {}
+        for weight in weights:
+            cust_code = weight["CustCode"]
+            cust_name = weight["CustName"]
+            prod_code = weight["ProdCode"]
+            prod_name = weight["ProdName"]
+            net_weight = weight["Netweight"]
+            trantype = weight["Trantype"]
+
+            if cust_code in customer_dict:
+                customer_data = customer_dict[cust_code]
+            else:
+                customer_data = {
+                    "CustomerCode": cust_code,
+                    "CustomerName": cust_name,
+                    "TotalWeight": 0,
+                    "TotalItems": 0,
+                    "TotalOut": 0,
+                    "CountOut": 0,
+                    "TotalIn": 0,
+                    "CountIn": 0,
+                    "Products": []
+                }
+                customer_dict[cust_code] = customer_data
+                customer_data_list.append(customer_data)
+
+            customer_data["TotalWeight"] += net_weight
+            customer_data["TotalItems"] += 1
+
+            product_index = next((i for i, p in enumerate(customer_data["Products"]) if p["ProductCode"] == prod_code),
+                                 None)
+            if product_index is not None:
+                customer_data["Products"][product_index]["TotalWeight"] += net_weight
+                customer_data["Products"][product_index]["TotalItems"] += 1
+            else:
+                customer_data["Products"].append({
+                    "ProductCode": prod_code,
+                    "ProductName": prod_name,
+                    "TotalWeight": net_weight,
+                    "TotalItems": 1,
+                    "TotalOut": 0,
+                    "CountOut": 0,
+                    "TotalIn": 0,
+                    "CountIn": 0
+                })
+
+            if trantype == "Xuất hàng":
+                customer_data["TotalOut"] += net_weight
+                customer_data["CountOut"] += 1
+
+                for product in customer_data["Products"]:
+                    if product["ProductCode"] == prod_code:
+                        product["CountOut"] += 1
+                        product["TotalOut"] += net_weight
+                        break
+            elif trantype == "Nhập hàng":
+                customer_data["TotalIn"] += net_weight
+                customer_data["CountIn"] += 1
+
+                for product in customer_data["Products"]:
+                    if product["ProductCode"] == prod_code:
+                        product["CountIn"] += 1
+                        product["TotalIn"] += net_weight
+                        break
+
+        report_data = {
+            "created_day": date_weight,
+            "CountWeight": count_weight,
+            "TotalWeight": total_weight,
+            "count_out": count_weight_out,
+            'total_out': total_weight_out,
+            "count_in": count_weight_in,
+            "total_in": total_weight_in,
+            "customer": customer_data_list
+        }
+
+        return JsonResponse(report_data)
+
+    # tim cac phieu can theo ma khach hang
+    def get_customer_weight(self, request, custCode, year, month, day, canId ):
+        date_weight = datetime(year, month, day).date()
+        try:
+            weight_tickets = Weight.objects.filter(date_time__date=date_weight, CanId_id=canId, CustCode=custCode)
+            data = [
+                {
+                    'STT': index + 1,
+                    "id": ticket.id,
+                    'Ticketnum': ticket.Ticketnum,
+                    'Netweight': ticket.Netweight,
+                    'CustCode': ticket.CustCode,
+                    'CustName': ticket.CustName,
+                    'ProdCode': ticket.ProdCode,
+                    'ProdName': ticket.ProdName,
+                    'Trantype': ticket.Trantype,
+                    'date_time': ticket.date_time
+                }
+                for index, ticket in enumerate(weight_tickets)
+            ]
+            return JsonResponse(data, safe=False)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+        # tim cac phieu can theo ma khach hang
+
+    def get_product_weight(self, request, prodCode, year, month, day, canId):
+        date_weight = datetime(year, month, day).date()
+        try:
+            weight_tickets = Weight.objects.filter(date_time__date=date_weight, CanId_id=canId, ProdCode=prodCode)
+            data = [
+                {
+                    'STT': index + 1,
+                    "id": ticket.id,
+                    'Ticketnum': ticket.Ticketnum,
+                    'Netweight': ticket.Netweight,
+                    'CustCode': ticket.CustCode,
+                    'CustName': ticket.CustName,
+                    'ProdCode': ticket.ProdCode,
+                    'ProdName': ticket.ProdName,
+                    'Trantype': ticket.Trantype,
+                    'date_time': ticket.date_time,
+                }
+                for index, ticket in enumerate(weight_tickets)
+            ]
+            return JsonResponse(data, safe=False)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+

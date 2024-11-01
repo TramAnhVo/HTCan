@@ -1,12 +1,14 @@
+from rest_framework import status
+from rest_framework.response import Response
 from rest_framework.serializers import ModelSerializer
-from .models import User, Weight, Customer, Product, Scale
+from .models import User, Weight, Scale, Image
 
 
 class UserSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields  = '__all__'
+        fields = '__all__'
         extra_kwargs = {
             'password': {
                 'write_only': True
@@ -14,29 +16,22 @@ class UserSerializer(ModelSerializer):
         }
 
 
-class CustomerSerializer(ModelSerializer):
-    class Meta:
-        model = Customer
-        fields = '__all__'
-
-
-class ProductSerializer(ModelSerializer):
-    class Meta:
-        model = Product
-        fields = '__all__'
-
-
 class ScaleSerializer(ModelSerializer):
+
     class Meta:
         model = Scale
         fields = '__all__'
 
 
 class WeightSerializer(ModelSerializer):
-    # CanId = ScaleSerializer()
-    Custcode = CustomerSerializer()
-    Prodcode = ProductSerializer()
 
     class Meta:
         model = Weight
+        fields = '__all__'
+
+
+class ImageSerializer(ModelSerializer):
+
+    class Meta:
+        model = Image
         fields = '__all__'

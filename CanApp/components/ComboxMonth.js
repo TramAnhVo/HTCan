@@ -1,6 +1,5 @@
-import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 
 const data = [
@@ -20,40 +19,11 @@ const data = [
 
 const ComboxMonth = () => {
     const [value, setValue] = useState(null);
-    const [month, setMonth] = useState(null)
-    const [year, setYear] = useState(null)
     const [isFocus, setIsFocus] = useState(false);
-    const [inputValue, setInputValue] = useState('');
-    const navigation = useNavigation();
-
-    const selectConfirm = (value) => {
-        setMonth(value)
-    }
-
-    const handleInputChange = (text) => {
-        // Chỉ cho phép nhập số
-        const numericValue = text.replace(/[^0-9]/g, '');
-        // Giới hạn độ dài thành 4 chữ số
-        const truncatedValue = numericValue.substring(0, 4);
-
-        setInputValue(truncatedValue);
-        if (truncatedValue.length === 4) {
-            handleConfirm(truncatedValue);
-        }
-    };
-
-    const handleConfirm = (value) => {
-        setYear(value)
-    }
-
-    const Confirm = () => {
-        navigation.navigate("SearchMonthYear", {year, month})
-    }
 
     return (
         <View>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
-                <Text style={{ fontSize: 17, marginRight: 5 }}>Tháng</Text>
                 <View style={styles.container}>
                     <Dropdown
                         style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
@@ -79,20 +49,6 @@ const ComboxMonth = () => {
                     />
                 </View>
             </View>
-
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 15 }}>
-                <Text style={{ fontSize: 17, marginRight: 15 }}>Năm</Text>
-                <TextInput style={styles.InputYear}
-                    value={inputValue}
-                    placeholder="Nhập năm"
-                    onChangeText={handleInputChange}
-                    keyboardType="numeric"
-                    maxLength={4} />
-
-                <TouchableOpacity style={styles.SreachButton} onPress={Confirm}>
-                    <Text style={{ color: 'white', textAlign: 'center', fontSize: 16, fontWeight: '700' }}>Tìm</Text>
-                </TouchableOpacity>
-            </View>
         </View>
 
     );
@@ -102,16 +58,16 @@ export default ComboxMonth;
 
 const styles = StyleSheet.create({
     container: {
-        width: '40%',
-        marginLeft: 10,
+        width: '60%',
+        marginLeft: 8,
     },
 
     dropdown: {
         backgroundColor: 'white',
-        height: 40,
+        height: 35,
         borderColor: 'gray',
-        borderWidth: 0.5,
-        borderRadius: 8,
+        borderWidth: 1,
+        borderRadius: 5,
         paddingHorizontal: 8,
     },
 
@@ -132,11 +88,11 @@ const styles = StyleSheet.create({
     },
 
     placeholderStyle: {
-        fontSize: 16,
+        fontSize: 14,
     },
 
     selectedTextStyle: {
-        fontSize: 16,
+        fontSize: 14,
     },
 
     iconStyle: {
@@ -146,25 +102,6 @@ const styles = StyleSheet.create({
 
     inputSearchStyle: {
         height: 40,
-        fontSize: 16,
+        fontSize: 14,
     },
-
-    InputYear: {
-        borderWidth: 1,
-        backgroundColor: 'white',
-        borderColor: 'gray',
-        borderRadius: 8,
-        fontSize: 16,
-        padding: 5,
-        width: '40%',
-        marginLeft: 10
-    },
-
-    SreachButton: {
-        backgroundColor: '#0099FF',
-        padding: 10,
-        borderRadius: 20,
-        width: '30%',
-        marginLeft: '10%'
-    }
 });

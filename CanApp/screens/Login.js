@@ -64,7 +64,7 @@ const Login = ({ navigation }) => {
         <LinearGradient colors={['#2D99AE', '#764ba2']} style={styles.container}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
             <View style={styles.formContainer}>
-                <Text style={styles.welcomeText}>Welcome!!</Text>
+                <Text style={styles.welcomeText}>Xin chào!!</Text>
 
                 <View style={[styles.inputView, styles.inputBorder]}>
                     <AntDesign name="user" size={24} color="#fff" style={styles.icon} />

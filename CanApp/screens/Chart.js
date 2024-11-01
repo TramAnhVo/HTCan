@@ -7,13 +7,13 @@ export default Chart = ({navigation}) => {
         <View style={{ flex: 1 }}>
             <View>
                 <TouchableOpacity style={styles.itemView}  onPress={() => navigation.navigate("ScalesChartBar")}>
-                    <FontAwesome name="bar-chart" size={40} color="#0066FF" />
-                    <Text style={{ fontWeight: '700', fontSize: 20, marginLeft: 20 }}>THỐNG KÊ TUẦN</Text>
+                    <FontAwesome name="bar-chart" size={30} color="#0066FF" />
+                    <Text style={{ fontWeight: '700', fontSize: 16, marginLeft: 8 }}>THỐNG KÊ TUẦN</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.itemView} onPress={() => navigation.navigate("ScalesChartLine")} >
-                    <AntDesign name="linechart" size={40} color="#0066FF" />
-                    <Text style={{ fontWeight: '700', fontSize: 20, marginLeft: 20 }}>THỐNG KÊ THÁNG</Text>
+                    <AntDesign name="linechart" size={30} color="#0066FF" />
+                    <Text style={{ fontWeight: '700', fontSize: 16, marginLeft: 8 }}>THỐNG KÊ THÁNG</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -27,7 +27,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: 'white',
         width: '90%',
-        height: 80,
+        height: 63,
         borderColor: '#CFCFCF',
         borderWidth: 1,
         borderRadius: 25,

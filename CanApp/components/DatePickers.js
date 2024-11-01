@@ -20,12 +20,12 @@ const Example = () => {
         const dateTimeString = date;
         const dateTime = new Date(dateTimeString);
         
-        const nam = dateTime.getFullYear();
-        const thang = dateTime.getMonth() + 1;
-        const ngay = dateTime.getDate();
+        const year = dateTime.getFullYear();
+        const month = dateTime.getMonth() + 1;
+        const day = dateTime.getDate();
 
         hideDatePicker();
-        navigation.navigate('SearchOfDay', { ngay, thang, nam });
+        navigation.navigate('ScalesSreachOfDay', {  "day": day, "month": month, "year": year });
     };
 
     return (

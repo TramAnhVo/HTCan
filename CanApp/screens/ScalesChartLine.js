@@ -48,15 +48,15 @@ export default ScalesChartLine = ({ navigation }) => {
                 {scales.map(s => (
                     <View key={s.id}>
                         <TouchableOpacity style={styles.ScalesItem} onPress={() => goToScaleDetail(s.id)}>
-                            <View style={{ flexDirection: 'row', marginBottom: 10, marginLeft: 5 }}>
+                            <View style={{ flexDirection: 'row', marginBottom: 7, marginLeft: 5 }}>
                                 <Ionicons name="scale" size={20} color="black" style={{ paddingRight: 5 }} />
-                                <Text style={{ paddingRight: 10, fontSize: 16, fontWeight: '700' }}>Tên cân:</Text>
+                                <Text style={{ paddingRight: 10, fontSize: 15, fontWeight: '700' }}>Tên cân:</Text>
                                 <Text style={{ fontSize: 16 }}>{s.ScaleName}</Text>
                             </View>
 
                             <View style={{ flexDirection: 'row', marginLeft: 5 }}>
                                 <Fontisto name="date" size={20} color="black" style={{ paddingRight: 5 }} />
-                                <Text style={{ paddingRight: 10, fontSize: 16, fontWeight: '700' }}>Ngày thiết lập:</Text>
+                                <Text style={{ paddingRight: 10, fontSize: 15, fontWeight: '700' }}>Ngày thiết lập:</Text>
                                 <Text style={{ fontSize: 16 }}>{moment(s.CreatDay, 'YYYY-MM-DD').format('DD/MM/YYYY')}</Text>
                             </View>
                         </TouchableOpacity>
@@ -67,13 +67,13 @@ export default ScalesChartLine = ({ navigation }) => {
                             end={[0, 1]}
                             style={{
                                 padding: 5,
-                                height: 50,
-                                width: '4%',
+                                width: '3.5%',
                                 borderTopLeftRadius: 10,
                                 borderBottomLeftRadius: 10,
-                                margin: 10,
-                                height: 100,
+                                margin: 5,
+                                height: 80,
                                 position: 'absolute',
+                                top: 0, 
                                 top: 3
                             }}
                         >
@@ -88,10 +88,11 @@ export default ScalesChartLine = ({ navigation }) => {
 
 const styles = StyleSheet.create({
     ScalesItem: {
-        height: 100,
+        height: 80,
         backgroundColor: 'white',
-        margin: 13,
-        padding: 20,
+        marginVertical: 8,
+        marginHorizontal: 15,
+        padding: 13,
         borderRadius: 10,
         position: 'relative',
         shadowColor: '#000',

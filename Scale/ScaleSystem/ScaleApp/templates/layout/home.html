@@ -1,6 +1,37 @@
-{% extends 'rest_framework/base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cân điện tử Tân Quốc Hưng</title>
+    <link rel="icon" type="image/x-icon" href="https://res.cloudinary.com/dfhexl1gh/image/upload/v1729760118/logo_ouiu7d.jpg">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center; /* Canh giữa nội dung */
+            background-color: #f4f4f4; /* Màu nền */
+            padding: 50px; /* Khoảng cách xung quanh */
+        }
+        .login-button {
+            display: inline-block;
+            background-color: #007bff; /* Màu nền nút */
+            color: white; /* Màu chữ */
+            padding: 10px 20px; /* Khoảng cách trong nút */
+            border: none; /* Bỏ viền */
+            border-radius: 5px; /* Bo góc */
+            text-decoration: none; /* Bỏ gạch chân */
+            font-size: 16px; /* Kích thước chữ */
+            transition: background-color 0.3s; /* Hiệu ứng chuyển màu */
+        }
+        .login-button:hover {
+            background-color: #0056b3; /* Màu nền khi hover */
+        }
+    </style>
+</head>
+<body>
+    <h1>Chào mừng đến với Trang Chủ!</h1>
 
-{% block body %}
-  <h1>Welcome to my app!</h1>
-  <p>This is the new home page template.</p>
-{% endblock %}
+    <!-- Nút đăng nhập -->
+    <a href="{% url 'admin:login' %}" class="login-button">Đăng nhập</a>
+</body>
+</html>

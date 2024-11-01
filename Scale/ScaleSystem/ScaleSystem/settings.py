@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -52,7 +52,6 @@ import pymysql
 pymysql.install_as_MySQLdb()
 
 AUTH_USER_MODEL = 'ScaleApp.User'
-ALLOWED_HOSTS = ['*']
 
 import cloudinary
 cloudinary.config(
@@ -63,16 +62,22 @@ cloudinary.config(
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-CLIENT_ID = 'dKRNzwMxrA2ppNDq3QGEFxcPHMrCydVMRosqkBhh'
-CLIENT_SECRET = 'YngfObvq5qcRJABlqPow8HmM9SGM5dOw5JGBKADgcjadXmVvAIRzcHMIxMNMf4zFZrSGBBlhHQ1lldLS9bDdQYPf1KXQoMEA2QLAzN5A4YUb5n4r6pz7WE57AioZymKf'
+CLIENT_ID = 'fAeDVdd6kwDHzSfBIZpp4k3s2J4nxvW4ypKye5du'
+CLIENT_SECRET = '6hXMY1n0dEke8cbw7wkusNeYpcuQltqDb39R5QbjJTMozJXl7Ct6StUJNnsEiWvGUw6rWTbfIfp9jYsteXt5ygeTi7oIGbEarQb5h1eEZmLRtwuXEaU5CgwZdNhyUkqG'
 
 OAUTH2_PROVIDER = {
-    'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore'
+    'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore',
+    'ACCESS_TOKEN_MODEL': 'oauth2_provider.AccessToken',
 }
 
 REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.AllowAny',
+    ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     )
 }
 
@@ -92,7 +97,7 @@ ROOT_URLCONF = 'ScaleSystem.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'ScaleApp/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -157,6 +162,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

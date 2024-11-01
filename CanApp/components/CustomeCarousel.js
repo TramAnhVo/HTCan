@@ -1,11 +1,10 @@
 import React, { useState } from "react";
-import { Image, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import ImageModal from "react-native-image-modal";
 import Animated, { interpolate, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 
-export default CustomeCarousel = ({ data }) => {
-    const [newData] = useState([{ key: 'spacer-left' },
-    ...data,
-    { key: 'spacer-right' }])
+const CustomeCarousel = ({ data }) => {
+    const [newData] = useState([{ key: 'spacer-left' }, ...data, { key: 'spacer-right' }])
     const { width } = useWindowDimensions();
     const SIZE = width * 0.75;
     const SPACER = (width - SIZE) / 3;
@@ -47,14 +46,22 @@ export default CustomeCarousel = ({ data }) => {
                 return (
                     <View style={{ width: SIZE }} key={index} >
                         <Animated.View style={[styles.imageContainer, styleAnimated]}>
-                            <Image source={item.image} style={styles.imageCard} />
+                            <ImageModal
+                                resizeMode='contain'
+                                imageBackgroundColor='#ffff'
+                                style={styles.imageCard}
+                                source={{ uri: item.image }}
+                            />
                         </Animated.View>
+
                     </View>
                 );
             })}
         </Animated.ScrollView>
     )
 }
+
+export default CustomeCarousel;
 
 const styles = StyleSheet.create({
     imageContainer: {

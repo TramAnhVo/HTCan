@@ -89,7 +89,7 @@ export default ChartLine = ({ route, navigation }) => {
                         marginRight: 10
                     },
                     propsForDots: {
-                        r: "5",
+                        r: "4",
                         strokeWidth: "1",
                         stroke: "#990000",
                     }
@@ -104,25 +104,19 @@ export default ChartLine = ({ route, navigation }) => {
                 }}
             />
 
+            <Text style={{textAlign: 'center'}}>Biểu đồ Tổng số phiếu qua từng tháng</Text>
+
             <ScrollView>
                 {data === null ? <ActivityIndicator /> : <>
-                    {data.map(m => (
-                        <TouchableOpacity style={styles.ItemMonth} key={m.month} onPress={() => goToWeightDetail(m.month)}>
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Text style={{ color: 'blue', fontSize: 18, fontWeight: '800', alignItems: 'center' }}>Tháng {m.month}</Text>
-                            </View>
-
-                            <View style={{ flexDirection: 'row', marginTop: 3 }}>
-                                <Text style={{ fontSize: 16 }}>Tổng số phiếu cân: </Text>
-                                <Text style={{ fontSize: 18, color: 'green', paddingLeft: 5, fontWeight: '700', color:'red' }}>{m.count}</Text>
-                            </View>
-
-                            <View style={{ flexDirection: 'row', marginTop: 2 }}>
-                                <Text style={{ fontSize: 16 }}>Tổng trọng lượng hàng: </Text>
-                                <Text style={{ fontSize: 18, color: 'green', paddingLeft: 5, fontWeight: '700' }}>{formatCurrency(m.sum)}</Text>
-                            </View>
-                        </TouchableOpacity>
-                    ))}
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-start', marginVertical: 10, flexWrap: 'wrap', marginLeft: 3 }}>
+                        {data.map(m => (
+                            <TouchableOpacity style={styles.ItemMonth} key={m.month} onPress={() => goToWeightDetail(m.month)}>
+                                <Text style={styles.textMonth}>Tháng {m.month}</Text>
+                                <Text style={[styles.textContent, style={color: '#006600', marginTop: 5} ]}>{m.count} phiếu</Text>
+                                <Text style={[styles.textContent, style={color: 'red', marginTop: 3} ]}>{formatCurrency(m.sum)}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
                 </>}
             </ScrollView>
         </ScrollView>
@@ -132,20 +126,35 @@ export default ChartLine = ({ route, navigation }) => {
 const styles = StyleSheet.create({
     ItemMonth: {
         backgroundColor: 'white',
-        width: '93%',
-        height: 100,
-        borderRadius: 20,
-        paddingBottom: 10,
-        paddingTop: 10,
-        paddingLeft: 25,
-        paddingRight: 25,
-        marginTop: 5,
-        marginBottom: 5,
-        marginLeft: 13,
+        width: '30%',
+        height: 90,
+        borderRadius: 10,
+        marginVertical: 5,
+        marginHorizontal: 5,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.8,
         shadowRadius: 20,
         elevation: 7,
+    },
+
+    textMonth: {
+        backgroundColor: '#0099FF',
+        color: 'white',
+        fontSize: 13,
+        fontWeight: '800',
+        alignItems: 'center',
+        textAlign: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#3399FF',
+        paddingVertical: 3,
+        borderTopLeftRadius: 10,
+        borderTopRightRadius: 10
+    },
+
+    textContent: {
+        fontSize: 13,
+        fontWeight: '700',
+        textAlign: 'center',
     }
 })

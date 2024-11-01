@@ -1,31 +1,49 @@
 import { FontAwesome } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import moment from "moment";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import * as XLSX from 'xlsx';
+import ChartPie from "../components/ChartPie";
 import Api, { endpoints } from "../configs/Api";
 
 export default WeightChartMonth = ({ route, navigation }) => {
-    const [weight, setWeight] = useState(null)
+    const [groups, setGroups] = useState([]);
+    const [dataMonth, setDataMonth] = useState([])
+
     const { month, scaleId } = route.params;
-    const [trantype, setTrantype] = useState(3);
-    const [stateSort, setStateSort] = useState(true)
-    const [selectedOption, setSelectedOption] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    const Tab = createMaterialTopTabNavigator();
 
     useEffect(() => {
-        const loadData = async (trantype) => {
+        const loadData = async () => {
             try {
-                let res = await Api.get(endpoints['weightDetailMonth'](month, trantype, scaleId));
-                setWeight(res.data)
+                let res = await Api.get(endpoints['GeneralMonth'](month, scaleId));
+                setGroups(res.data)
+            } catch (ex) {
+                console.error(ex);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        const loadDataMonth = async () => {
+            try {
+                let res = await Api.get(endpoints['weightDetailMonth'](month, scaleId));
+                setDataMonth(res.data)
             } catch (ex) {
                 console.error(ex);
             }
         }
 
-        loadData(trantype)
-    }, [month, trantype, scaleId])
+        loadData()
+        loadDataMonth()
+    }, [])
 
-    // hàm để phân cách giữa hàng ngàn với hàng khác
     const formatCurrency = (value) => {
         // Lấy phần nguyên của giá trị
         const intValue = parseInt(value);
@@ -34,202 +52,313 @@ export default WeightChartMonth = ({ route, navigation }) => {
         return intValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     };
 
-    //  hàm hiện thị nút đang hoạt động (tô màu nút đã chọn)
-    const handleOptionSelect = (option) => {
-        setSelectedOption(option);
-        if (option === 'option1') {
-            setTrantype(3);
-        } else if (option === 'option2') {
-            setTrantype(1);
-        } else if (option === 'option3') {
-            setTrantype(2);
-        }
-    };
+    const gotoDetail = (date) => {
+        const dateTimeString = date;
+        const dateTime = new Date(dateTimeString);
 
-    // hàm sắp xếp các phiếu cân
-    const sortWeight = (data) => {
-        if (stateSort === true) {
-            data.sort((a, b) => a.phieuCan.MaPhieu.localeCompare(b.phieuCan.MaPhieu));
-            setStateSort(false)
-        } else {
-            data.sort((a, b) => b.phieuCan.MaPhieu.localeCompare(a.phieuCan.MaPhieu));
-            setStateSort(true)
-        }
+        const year = dateTime.getFullYear();
+        const month = dateTime.getMonth() + 1;
+        const day = dateTime.getDate();
 
-        return data;
-    };
 
-    // link đến phiếu cân chi tiết
-    const goToWeightDetail = (weightId) => {
-        navigation.navigate("WeightDetail", { "weightId": weightId })
+        navigation.navigate('GeneralWeightDetail', { "scaleId": scaleId, "day": day, "month": month, "year": year });
     }
 
-    // tính tổng trọng lượng
-    const TotalWeight = (item) => {
-        let totalWeight = 0;
-        let countWeight = 0;
-        item.forEach((items) => {
-            totalWeight += items.phieuCan.TLHang;
-            countWeight += 1;
-        });
-        return { totalWeight, countWeight };
+    // Hàm chuyển đổi định dạng ngày
+    const formatDate = (dateString) => {
+        const [year, month, day] = dateString.split('-');
+        return `${day}/${month}/${year}`; // Định dạng DD/MM/YYYY
     };
 
+    // Hàm chuyển đổi định dạng giờ
+    const formatTime = (timeString) => {
+        return timeString.split('.')[0]; // Lấy phần trước dấu '.'
+    };
+
+    const ExportToExcel = async () => {
+        try {
+            const formattedData = dataMonth.map(item => {
+                return {
+                    Ticketnum: item.Ticketnum,
+                    Docnum: item.Docnum,
+                    Truckno: item.Truckno,
+
+                    Date_in: formatDate(item.Date_in),
+                    Date_out: formatDate(item.Date_out),
+
+                    Firstweight: item.Firstweight,
+                    Secondweight: item.Secondweight,
+                    Netweight: item.Netweight,
+                    Trantype: item.Trantype,
+
+                    ProdCode: item.ProdCode,
+                    ProdName: item.ProdName,
+                    CustCode: item.CustCode,
+                    CustName: item.CustName,
+
+                    time_in: formatTime(item.time_in),
+                    time_out: formatTime(item.time_out),
+                    date_time: new Date(item.date_time).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+                    note: item.Note,
+                };
+            });
+
+            let wb = XLSX.utils.book_new();
+            let ws = XLSX.utils.json_to_sheet(formattedData);
+
+            // Đổi tên cột thành tiếng Việt
+            ws['A1'] = { v: 'Mã phiếu cân', t: 's' };
+            ws['B1'] = { v: 'Chứng từ', t: 's' };
+            ws['C1'] = { v: 'Số xe', t: 's' };
+            ws['D1'] = { v: 'Ngày xe vào', t: 's' };
+            ws['E1'] = { v: 'Ngày xe ra', t: 's' };
+
+            ws['F1'] = { v: 'Trọng lượng lần 1', t: 's' };
+            ws['G1'] = { v: 'Trọng lượng lần 2', t: 's' };
+            ws['H1'] = { v: 'Trọng lượng thực', t: 's' };
+
+            ws['I1'] = { v: 'Loại phiếu', t: 's' };
+            ws['J1'] = { v: 'Mã hàng hóa', t: 's' };
+            ws['K1'] = { v: 'Tên hàng hóa', t: 's' };
+            ws['L1'] = { v: 'Mã khách hàng', t: 's' };
+            ws['M1'] = { v: 'Tên khách hàng', t: 's' };
+
+            ws['N1'] = { v: 'Giờ xe vào', t: 's' };
+            ws['O1'] = { v: 'Giờ xe ra', t: 's' };
+            ws['P1'] = { v: 'Ngày giờ tạo phiếu', t: 's' };
+            ws['Q1'] = { v: 'Ghi chú', t: 's' };
+
+            XLSX.utils.book_append_sheet(wb, ws, "dataPerson", true);
+            const base64 = XLSX.write(wb, { type: "base64" });
+            const filename = FileSystem.documentDirectory + "Data_Thang_" + month + ".xlsx";
+            FileSystem.writeAsStringAsync(filename, base64, {
+                encoding: FileSystem.EncodingType.Base64
+            }).then(() => {
+                Sharing.shareAsync(filename);
+            });
+        } catch (error) {
+            console.error('Lỗi khi xuất file:', error);
+            Alert.alert('Lỗi khi xuất file:', error.message);
+        }
+    }
+
+    const ChartMonth = () => {
+        return (
+            <ScrollView style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', marginTop: 10, marginBottom: 0, justifyContent: 'space-between' }}>
+                    <View style={styles.titleDate}>
+                        <FontAwesome name="calendar" size={17} color="white" />
+                        <Text style={{ color: 'white', fontWeight: '700', marginLeft: 3, fontSize: 13 }}>Tháng {month}</Text>
+                    </View>
+
+                    <TouchableOpacity style={styles.buttonDetail} onPress={ExportToExcel}>
+                        <MaterialCommunityIcons name="microsoft-excel" size={18} color="white" />
+                        <Text style={{ color: 'white', fontSize: 13, fontWeight: '700', marginLeft: 3 }}>Xuất excel</Text>
+                    </TouchableOpacity>
+                </View>
+
+                <View style={{ marginBottom: 5 }}>
+                    <ChartPie countIn={groups.CountIn} countOut={groups.CountOut} />
+                    <Text style={{ textAlign: 'center', fontSize: 13 }}>Biểu đồ về số lượng phiếu trong tháng</Text>
+                </View>
+
+                <View style={[styles.item, style = { marginTop: 10 }]}>
+                    <View style={{
+                        width: '43%', backgroundColor: 'lightblue', paddingVertical: 10, height: 65, borderRadius: 5,
+                        shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.8, shadowRadius: 5, elevation: 4
+                    }}>
+                        <Text style={{ textAlign: 'center', fontSize: 13, fontWeight: '600' }}>Tổng phiếu cân</Text>
+                        <Text style={{ textAlign: 'center', fontSize: 13, fontWeight: '800' }}>{groups.CountWeight}</Text>
+                    </View>
+
+                    <View style={{
+                        width: '53%', backgroundColor: 'lightblue', paddingVertical: 10, height: 65, borderRadius: 5,
+                        shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.8, shadowRadius: 5, elevation: 4
+                    }}>
+                        <Text style={{ textAlign: 'center', fontSize: 13, fontWeight: '600' }}>Tổng trọng lượng</Text>
+                        <Text style={{ textAlign: 'center', fontSize: 13, fontWeight: '800' }}>{formatCurrency(groups.TotalWeight || 0)}</Text>
+                    </View>
+                </View>
+
+                <View style={styles.item}>
+                    <View style={{
+                        width: '43%', backgroundColor: 'lightgreen', paddingVertical: 10, height: 65, borderRadius: 5,
+                        shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.8, shadowRadius: 5, elevation: 4
+                    }}>
+                        <Text style={{ textAlign: 'center', fontSize: 13, fontWeight: '600' }}>Tổng phiếu nhập</Text>
+                        <Text style={{ textAlign: 'center', fontSize: 13, fontWeight: '800' }}>{groups.CountIn}</Text>
+                    </View>
+
+                    <View style={{
+                        width: '53%', backgroundColor: 'lightgreen', paddingVertical: 10, height: 65, borderRadius: 5,
+                        shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.8, shadowRadius: 5, elevation: 4
+                    }}>
+                        <Text style={{ textAlign: 'center', fontSize: 13, fontWeight: '600' }}>Tổng trọng lượng nhập</Text>
+                        <Text style={{ textAlign: 'center', fontSize: 13, fontWeight: '800' }}>{formatCurrency(groups.TotalIn || 0)}</Text>
+                    </View>
+                </View>
+
+                <View style={styles.item}>
+                    <View style={{
+                        width: '43%', backgroundColor: 'pink', paddingVertical: 10, height: 65, borderRadius: 5,
+                        shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.8, shadowRadius: 5, elevation: 4
+                    }}>
+                        <Text style={{ textAlign: 'center', fontSize: 13, fontWeight: '600' }}>Tổng phiếu xuất</Text>
+                        <Text style={{ textAlign: 'center', fontSize: 13, fontWeight: '800' }}>{groups.CountOut}</Text>
+                    </View>
+
+                    <View style={{
+                        width: '53%', backgroundColor: 'pink', paddingVertical: 10, height: 65, borderRadius: 5,
+                        shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.8, shadowRadius: 5, elevation: 4
+                    }}>
+                        <Text style={{ textAlign: 'center', fontSize: 13, fontWeight: '600' }}>Tổng trọng lượng xuất</Text>
+                        <Text style={{ textAlign: 'center', fontSize: 13, fontWeight: '800' }}>{formatCurrency(groups.TotalOut || 0)}</Text>
+                    </View>
+                </View>
+
+            </ScrollView>
+        )
+    }
+
+    const MonthDetail = () => {
+        return (
+            <ScrollView>
+                <View>
+                    <Text style={{ backgroundColor: '#0099FF', textAlign: 'center', padding: 10, fontSize: 14, fontWeight: '700', color: 'white' }}>Tháng {month}</Text>
+                </View>
+
+                {groups === null ? <ActivityIndicator /> : <>
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-start', marginVertical: 10, flexWrap: 'wrap', marginLeft: 3 }}>
+                        {groups.days.map(g => (
+                            <TouchableOpacity key={g.code} style={styles.itemDetail} onPress={() => gotoDetail(g.code)}>
+                                <Text style={{ fontSize: 13, textAlign: 'center', color: 'red', fontWeight: '700' }}>{moment(g.code).utcOffset(7).format('DD-MM-YYYY')}</Text>
+                                <Text style={{ fontSize: 12, textAlign: 'center', fontWeight: '700' }}>{formatCurrency(g.count)} phiếu</Text>
+                                <Text style={{ fontSize: 12, textAlign: 'center', fontWeight: '700' }}>{formatCurrency(g.total)}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </>}
+            </ScrollView>
+        )
+    }
+
     return (
-        <ScrollView style={{ flex: 1 }}>
-            {weight === null ? <ActivityIndicator /> : <>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 10, marginBottom: 2 }}>
-                    <View style={styles.TitleTotal}>
-                        <Text style={{ fontSize: 17, fontWeight: '700', textAlign: 'center' }}>Tổng phiếu</Text>
-                        <Text style={{ fontSize: 28, fontWeight: '700', textAlign: 'center', color: 'red' }}>{TotalWeight(weight.PhieuCan).countWeight}</Text>
-                    </View>
-
-                    <View style={styles.TolalWeight}>
-                        <Text style={{ fontSize: 17, fontWeight: '700', textAlign: 'center' }}>Tổng trọng lượng hàng</Text>
-                        <Text style={{ fontSize: 28, fontWeight: '700', textAlign: 'center', color: 'red' }}>{formatCurrency(TotalWeight(weight.PhieuCan).totalWeight)}</Text>
-                    </View>
-                </View>
-
-                <View style={{ height: 55 }}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', marginTop: 10 }}>
-                        <TouchableOpacity style={[styles.ItemSreach, style = { width: '16%' }, selectedOption === 'option1' && styles.selectedItem]} onPress={() => handleOptionSelect('option1')}>
-                            <Text style={{ marginRight: 5, textAlign: 'center', fontSize: 15 }}>Tất cả</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity style={[styles.ItemSreach, style = { width: '25%' }, selectedOption === 'option2' && styles.selectedItem]} onPress={() => handleOptionSelect('option2')}>
-                            <Text style={{ marginRight: 5, textAlign: 'center', fontSize: 15 }}>Nhập hàng</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity style={[styles.ItemSreach, style = { width: '24%' }, selectedOption === 'option3' && styles.selectedItem]} onPress={() => handleOptionSelect('option3')}>
-                            <Text style={{ marginRight: 5, textAlign: 'center', fontSize: 15 }}>Xuất hàng</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity style={[styles.ItemSreach, style = { width: '22%' }]} onPress={() => sortWeight(weight.PhieuCan)}>
-                            <Text style={{ marginRight: 8, textAlign: 'center', fontSize: 15 }}>sắp xếp</Text>
-                            <FontAwesome name="sort" size={18} color="black" />
-                        </TouchableOpacity>
-                    </View>
-                </View>
-
-                {weight.PhieuCan.length === 0 ? (
-                    <Text style={{ fontSize: 17, textAlign: 'center', marginTop: 10 }}>Không có phiếu cân</Text>
-                ) : (weight && weight.PhieuCan.map((item, index) => (
-                    <View key={item.phieuCan.key}>
-                        <TouchableOpacity style={styles.ItemWeight} onPress={() => goToWeightDetail(item.phieuCan.key)}>
-                            <View style={{ flexDirection: 'row' }}>
-                                <Text style={{ fontSize: 17 }}>Mã phiếu: </Text>
-                                <Text style={{ fontSize: 17, marginLeft: 5, fontWeight: '800' }}>{item.phieuCan.MaPhieu}</Text>
-                            </View>
-
-                            <View style={{ flexDirection: 'row', marginTop: 4 }}>
-                                <Text style={{ fontSize: 17 }}>Trọng lượng thực: </Text>
-                                <Text style={{ fontSize: 17, marginLeft: 5, fontWeight: '800', color: 'red' }}>{formatCurrency(item.phieuCan.TLHang)}</Text>
-                            </View>
-
-                            <View style={{ flexDirection: 'row', marginTop: 4 }}>
-                                <Text style={{ fontSize: 17 }}>Ngày tạo phiếu: </Text>
-                                <Text style={{ fontSize: 17, marginLeft: 5, fontWeight: '700' }}>{moment(item.phieuCan.NgayTaoPhieu).utcOffset(7).format('DD/MM/YYYY HH:mm:ss')}</Text>
-                            </View>
-                        </TouchableOpacity>
-
-                        <LinearGradient
-                            colors={['#00FF7F', '#008B00']}
-                            start={[0, 0]}
-                            end={[0, 1]}
-                            style={{
-                                width: '4%',
-                                borderTopLeftRadius: 10,
-                                borderBottomLeftRadius: 10,
-                                margin: 5,
-                                height: 97,
-                                position: 'absolute',
-                                top: 0,
-                                left: 5
-                            }}
-                        >
-                            <View></View>
-                        </LinearGradient>
-                    </View>
-                ))
-                )}
-
-            </>}
-        </ScrollView>
+        <View style={{ flex: 1 }}>
+            {loading ? (
+                <ActivityIndicator size="large" color="#0000ff" />
+            ) : (
+                <Tab.Navigator>
+                    <Tab.Screen name="ChartMonth" component={ChartMonth}
+                        options={{
+                            title: 'Thống kê tổng quát',
+                            tabBarLabel: ({ focused }) => (
+                                <Text style={{ fontSize: 11 }}>THỐNG KÊ TỔNG QUÁT</Text> // Thay đổi kích thước chữ tại đây
+                            ),
+                        }} />
+                    <Tab.Screen name="MonthDetail" component={MonthDetail}
+                        options={{
+                            title: 'Thống kê chi tiết',
+                            tabBarLabel: ({ focused }) => (
+                                <Text style={{ fontSize: 11 }}>THỐNG KÊ CHI TIẾT</Text> // Thay đổi kích thước chữ tại đây
+                            ),
+                        }} />
+                </Tab.Navigator>
+            )}
+        </View>
     )
 }
 
 const styles = StyleSheet.create({
-    ItemWeight: {
-        backgroundColor: 'white',
-        height: 97,
-        paddingTop: 10,
-        paddingBottom: 10,
-        paddingLeft: 25,
-        borderTopLeftRadius: 10,
-        borderBottomLeftRadius: 10,
-        width: '95%',
-        marginLeft: 10,
-        marginTop: 5,
-        marginBottom: 5,
-        borderRadius: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.8,
-        shadowRadius: 10,
-        elevation: 7,
-    },
-
-    ItemTitle: {
-        backgroundColor: 'white',
-        height: 100,
-        padding: 15,
-        borderRadius: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.8,
-        shadowRadius: 10,
-        elevation: 7,
-    },
-
-    TitleTotal: {
-        backgroundColor: 'white',
-        padding: 10,
-        height: 80,
-        width: '33%',
-        borderRadius: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.8,
-        shadowRadius: 10,
-        elevation: 7,
-    },
-
-    TolalWeight: {
-        backgroundColor: 'white',
-        padding: 10,
-        height: 80,
-        width: '62%',
-        borderRadius: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.8,
-        shadowRadius: 10,
-        elevation: 7,
-    },
-
-    ItemSreach: {
-        backgroundColor: 'white',
+    item: {
         flexDirection: 'row',
-        padding: 8,
-        borderRadius: 10,
+        marginHorizontal: 7,
+        marginVertical: 6,
+        justifyContent: 'space-evenly',
+    },
+
+    itemDetail: {
+        backgroundColor: 'white',
+        padding: 10,
+        borderRadius: 5,
+        borderTopRightRadius: 10,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.8,
-        shadowRadius: 10,
-        elevation: 7,
+        shadowRadius: 5,
+        elevation: 5,
+    },
+
+    fontTitle: {
+        fontWeight: '600',
+        fontSize: 15
+    },
+
+    itemButton: {
+        height: 45,
+        padding: 10,
+        width: '40%',
+        borderWidth: 1,
+        borderColor: 'blue',
     },
 
     selectedItem: {
         backgroundColor: 'lightblue',
     },
+
+    searchInput: {
+        backgroundColor: 'white',
+        height: 40,
+        width: '75%',
+        borderColor: 'gray',
+        flex: 1,
+        borderWidth: 1,
+        padding: 10,
+        borderRadius: 5
+    },
+
+    searchButton: {
+        width: '20%',
+        padding: 10,
+        backgroundColor: 'green',
+        borderRadius: 5,
+        height: 40,
+        marginLeft: 5
+    },
+
+    titleDate: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#0099FF',
+        height: 50,
+        padding: 10,
+        borderBottomRightRadius: 30,
+        borderTopRightRadius: 30,
+    },
+
+    buttonDetail: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#0099FF',
+        height: 50,
+        padding: 12,
+        borderBottomLeftRadius: 30,
+        borderTopLeftRadius: 30,
+    },
+
+    itemDetail: {
+        backgroundColor: 'white',
+        width: '31%',
+        padding: 10,
+        marginHorizontal: 4,
+        marginVertical: 5,
+        borderLeftWidth: 9,
+        borderLeftColor: 'green',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.8,
+        shadowRadius: 5,
+        elevation: 5,
+    }
 })

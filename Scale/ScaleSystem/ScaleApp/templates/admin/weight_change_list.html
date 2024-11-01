@@ -1,0 +1,27 @@
+{% extends 'admin/change_list.html' %}
+
+{% block object-tools-items %}
+    {{ block.super }}
+    <li>
+        <a href="{% url 'admin:export_to_excel' %}" class="export_to_excel">Export Excel</a>
+    </li>
+{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var exportButton = document.querySelector('.export_to_excel');
+            exportButton.addEventListener('click', function(event) {
+                event.preventDefault(); // Ngăn chặn hành động mặc định của liên kết
+
+                // Lấy các tham số lọc từ URL
+                var urlParams = new URLSearchParams(window.location.search);
+                var filteredUrl = event.target.href + '?' + urlParams.toString();
+
+                // Chuyển hướng đến URL đã lọc
+                window.location.href = filteredUrl;
+            });
+        });
+    </script>
+{% endblock %}

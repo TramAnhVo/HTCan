@@ -153,25 +153,25 @@ export default ProfileView = ({ navigation }) => {
             <View style={styles.header}>
                 <View style={styles.headerContent}>
                     <View style={styles.avatar}>
-                        <FontAwesome name="user" size={65} color="white" style={{ textAlign: 'center', height: 100, width: 100, paddingTop: '15%', paddingRight: '8%' }} />
+                        <FontAwesome name="user" size={55} color="white" style={{ textAlign: 'center', height: 90, width: 90, paddingTop: '15%', paddingRight: '8%' }} />
                     </View>
-                    <Text style={{ textAlign: 'center', fontSize: 24, fontWeight: '800' }}>{user.first_name}</Text>
+                    <Text style={{ textAlign: 'center', fontSize: 22, fontWeight: '800' }}>{user.first_name}</Text>
                 </View>
             </View>
 
             <ScrollView style={{ marginTop: '25%' }}>
-                <Text style={{ fontSize: 20, fontWeight: '800', marginLeft: 20 }}>Thông tin tài khoản</Text>
+                <Text style={{ fontSize: 18, fontWeight: '800', marginLeft: 20 }}>Thông tin tài khoản</Text>
 
                 {/* thông tin tai khoan nguoi dung */}
                 <View style={{ marginTop: 15 }} >
                     <TouchableOpacity style={styles.button} onPress={toggleHiddenText}>
                         <Ionicons name="person" size={24} color="black" style={{ marginLeft: 10 }} />
-                        <Text style={{ fontSize: 17, marginLeft: 5 }}>Thông tin tài khoản </Text>
+                        <Text style={{ fontSize: 15, marginLeft: 5 }}>Thông tin tài khoản </Text>
                     </TouchableOpacity>
                     {hidden && (
                         <View style={styles.accountUser}>
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
-                                <Text style={{ fontSize: 16 }}>Chủ tài khoản:</Text>
+                                <Text style={{ fontSize: 14 }}>Chủ tài khoản:</Text>
                                 <TextInput
                                     placeholderTextColor="black"
                                     style={[styles.titleInput, { color: edit ? 'black' : 'black' }]}
@@ -181,18 +181,18 @@ export default ProfileView = ({ navigation }) => {
                                     onChangeText={(text) => setName(text)}
                                 />
                                 <TouchableOpacity onPress={StateEditing}>
-                                    <FontAwesome6 name="pen-to-square" size={24} color="black" />
+                                    <FontAwesome6 name="pen-to-square" size={22} color="black" />
                                 </TouchableOpacity>
 
                                 {isButtonVisible && (
                                     <TouchableOpacity onPress={EditingName}>
-                                        <AntDesign name="checkcircle" size={24} color="#00CC99" />
+                                        <AntDesign name="checkcircle" size={22} color="#00CC99" />
                                     </TouchableOpacity>
                                 )}
                             </View>
 
                             <View style={{ flexDirection: 'row', marginTop: 15, justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Text style={{ fontSize: 16 }}>Số điện thoại:</Text>
+                                <Text style={{ fontSize: 14 }}>Số điện thoại:</Text>
                                 <TextInput
                                     placeholderTextColor="black"
                                     style={[styles.titleInput, { color: edit ? 'black' : 'black' }]}
@@ -204,18 +204,18 @@ export default ProfileView = ({ navigation }) => {
                                 />
 
                                 <TouchableOpacity onPress={StateEditing}>
-                                    <FontAwesome6 name="pen-to-square" size={24} color="black" />
+                                    <FontAwesome6 name="pen-to-square" size={22} color="black" />
                                 </TouchableOpacity>
 
                                 {isButtonVisible && (
                                     <TouchableOpacity onPress={EditingPhone}>
-                                        <AntDesign name="checkcircle" size={24} color="#00CC99" />
+                                        <AntDesign name="checkcircle" size={22} color="#00CC99" />
                                     </TouchableOpacity>
                                 )}
                             </View>
 
                             <View style={{ flexDirection: 'row', marginTop: 15, justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Text style={{ fontSize: 16 }}>Tên Công ty:</Text>
+                                <Text style={{ fontSize: 14 }}>Tên Công ty:</Text>
                                 <TextInput
                                     placeholderTextColor="black"
                                     style={styles.titleCompanyInput}
@@ -250,35 +250,35 @@ export default ProfileView = ({ navigation }) => {
                 <View style={{ marginTop: 15 }} >
                     <TouchableOpacity style={styles.button} activeOpacity={0.7} onPress={toggleHidden} >
                         <FontAwesome5 name="key" size={24} color="black" style={{ marginLeft: 10 }}/>
-                        <Text style={{ fontSize: 17, marginLeft: 5 }}>Đổi mật khẩu</Text>
+                        <Text style={{ fontSize: 15, marginLeft: 5 }}>Đổi mật khẩu</Text>
                     </TouchableOpacity>
 
                     { hiddenPassword && (
                         <View style={styles.PasswordContainer}>
                             <View style={{ flexDirection: 'row', marginTop: 10, justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Text style={{ fontSize: 16 }}>Mật khẩu mới:</Text>
+                                <Text style={{ fontSize: 14 }}>Mật khẩu mới:</Text>
                                 <TextInput
                                     placeholderTextColor="black"
                                     style={styles.titleInput}
-                                    placeholder="Nhập mật khẩu"
+                                    placeholder="Nhập mật khẩu..."
                                     value={password}
                                     onChangeText={(text) => setPassword(text)}
                                 />
                             </View>
 
-                            <View style={{ flexDirection: 'row', marginTop: 15, justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Text style={{ fontSize: 16 }}>Xác nhận mật khẩu:</Text>
+                            <View style={{ flexDirection: 'row', marginTop: 14, justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Text style={{ fontSize: 14 }}>Xác nhận mật khẩu:</Text>
                                 <TextInput
                                     placeholderTextColor="black"
                                     style={styles.titleInput}
-                                    placeholder="Nhập lại mật khẩu"
+                                    placeholder="Nhập lại mật khẩu..."
                                     value={passwordConfirm}
                                     onChangeText={(text) => setPasswordConfirm(text)}
                                 />
                             </View>
 
                             <TouchableOpacity style={styles.inputPassword} onPress={EditingPassword}>
-                                <Text style={{color: 'white', fontSize: 15, textAlign: 'center'}}>Cập nhật mật khẩu</Text>
+                                <Text style={{color: 'white', fontSize: 14, textAlign: 'center'}}>Cập nhật mật khẩu</Text>
                             </TouchableOpacity>
                         </View>
                     )}
@@ -306,7 +306,7 @@ export default ProfileView = ({ navigation }) => {
                 <View style={{ marginTop: 15, marginBottom: 15 }} >
                     <TouchableOpacity style={styles.button} activeOpacity={0.7} onPress={logout} >
                         <Ionicons name="exit" size={24} color="black" style={{ marginLeft: 10 }} />
-                        <Text style={{ fontSize: 17, marginLeft: 5 }}>Đăng xuất</Text>
+                        <Text style={{ fontSize: 15, marginLeft: 5 }}>Đăng xuất</Text>
                     </TouchableOpacity>
 
                     <LinearGradient
@@ -357,8 +357,8 @@ const styles = StyleSheet.create({
 
     avatar: {
         backgroundColor: '#1E90FF',
-        width: 100,
-        height: 100,
+        width: 90,
+        height: 90,
         borderRadius: 63,
         borderWidth: 4,
         borderColor: '#1E90FF',
@@ -370,6 +370,7 @@ const styles = StyleSheet.create({
     button: {
         flexDirection: 'row',
         height: 50,
+        alignItems: 'center',
         borderRadius: 5,
         padding: 10,
         backgroundColor: 'white',
@@ -386,7 +387,7 @@ const styles = StyleSheet.create({
     accountUser: {
         backgroundColor: 'white',
         width: '86%',
-        height: 250,
+        height: 220,
         padding: 10,
         marginTop: 5,
         marginLeft: '7%',
@@ -412,24 +413,24 @@ const styles = StyleSheet.create({
     },
 
     titleInput: {
-        width: '50%',
+        width: '52%',
         backgroundColor: 'white',
         borderWidth: 1,
         borderRadius: 10,
         borderColor: '#C0C0C0',
-        padding: 8,
-        fontSize: 16
+        padding: 7,
+        fontSize: 14
     },
 
     titleCompanyInput: {
         width: '68%',
-        height: 60,
+        height: 40,
         backgroundColor: 'white',
         borderWidth: 1,
         borderRadius: 10,
         borderColor: '#C0C0C0',
         padding: 8,
-        fontSize: 16
+        fontSize: 14
     },
 
     PasswordContainer: {

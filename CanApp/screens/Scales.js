@@ -10,6 +10,7 @@ export default Scales = ({ navigation }) => {
     const [scales, setScales] = useState(null)
     const [refreshing, setRefreshing] = useState(false);
     const [user, dispatch] = useContext(MyContext);
+    const currentDate = new Date();
 
     const loadScales = async () => {
         try {
@@ -32,9 +33,14 @@ export default Scales = ({ navigation }) => {
     }, [])
 
     const goToScaleDetail = (scaleId) => {
-        navigation.navigate("Weight", { "scaleId": scaleId })
+        const day = currentDate.getDate();
+        const month = currentDate.getMonth() + 1; // Months are zero-indexed, so we add 1
+        const year = currentDate.getFullYear();
+
+        navigation.navigate("GeneralWeightDetail", { "scaleId": scaleId, "day": day, "month": month, "year": year })
     }
 
+    // trang tai cac can cua user
     return (
         <ScrollView
             refreshControl={
@@ -48,16 +54,16 @@ export default Scales = ({ navigation }) => {
                 {scales.map(s => (
                     <View key={s.id} style={{marginTop: 10}}>
                         <TouchableOpacity style={styles.ScalesItem} onPress={() => goToScaleDetail(s.id)}>
-                            <View style={{ flexDirection: 'row', marginBottom: 7, marginLeft: 5 }}>
+                            <View style={{ flexDirection: 'row', marginBottom: 5 , marginLeft: 5 }}>
                                 <Ionicons name="scale" size={20} color="black" style={{ paddingRight: 5 }} />
-                                <Text style={{ paddingRight: 10, fontSize: 16, fontWeight: '700' }}>Tên cân:</Text>
-                                <Text style={{ fontSize: 16 }}>{s.ScaleName}</Text>
+                                <Text style={{ paddingRight: 10, fontSize: 14, fontWeight: '700' }}>Tên cân:</Text>
+                                <Text style={{ fontSize: 14 }}>{s.ScaleName}</Text>
                             </View>
 
                             <View style={{ flexDirection: 'row', marginLeft: 5 }}>
                                 <Fontisto name="date" size={20} color="black" style={{ paddingRight: 5 }} />
-                                <Text style={{ paddingRight: 10, fontSize: 16, fontWeight: '700' }}>Ngày thiết lập:</Text>
-                                <Text style={{ fontSize: 16 }}>{moment(s.CreatDay, 'YYYY-MM-DD').format('DD/MM/YYYY')}</Text>
+                                <Text style={{ paddingRight: 10, fontSize: 14, fontWeight: '700' }}>Ngày thiết lập:</Text>
+                                <Text style={{ fontSize: 14 }}>{moment(s.CreatDay, 'YYYY-MM-DD').format('DD/MM/YYYY')}</Text>
                             </View>
                         </TouchableOpacity>
 
@@ -66,11 +72,11 @@ export default Scales = ({ navigation }) => {
                             start={[0, 0]}
                             end={[0, 1]}
                             style={{
-                                width: '4%',
+                                width: '3.5%',
                                 borderTopLeftRadius: 10,
                                 borderBottomLeftRadius: 10,
                                 margin: 5,
-                                height: 90,
+                                height: 80,
                                 position: 'absolute',
                                 top: 0, 
                                 left: 3
@@ -87,13 +93,11 @@ export default Scales = ({ navigation }) => {
 
 const styles = StyleSheet.create({
     ScalesItem: {
-        height: 90,
+        height: 80,
         backgroundColor: 'white',
-        marginTop: 5,
-        marginBottom: 5,
-        marginLeft: 13,
-        marginRight: 13,
-        padding: 20,
+        marginVertical: 4,
+        marginHorizontal: 15,
+        padding: 14,
         borderRadius: 10,
         position: 'relative',
         shadowColor: '#000',

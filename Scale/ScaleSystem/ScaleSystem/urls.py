@@ -33,8 +33,8 @@ schema_view = get_schema_view(
         contact=openapi.Contact(email="tramanhvo2103@gmail.com"),
         license=openapi.License(name="Trâm Anh 2024@"),
     ),
-    public=True,
-    permission_classes=(permissions.AllowAny,),
+    public=False,
+    permission_classes=(permissions.IsAuthenticated,),
 )
 
 urlpatterns = [

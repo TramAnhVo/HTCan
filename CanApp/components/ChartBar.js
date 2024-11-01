@@ -1,4 +1,3 @@
-import { LinearGradient } from "expo-linear-gradient";
 import moment from "moment";
 import { useContext, useEffect, useState } from "react";
 import { ActivityIndicator, Dimensions, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -60,11 +59,11 @@ export default ChartBar = ({ route, navigation }) => {
         const keyDate = date
         const d = new Date(keyDate)
 
-        const nam = d.getFullYear();
-        const thang = d.getMonth() + 1;
-        const ngay = d.getDate();
+        const year = d.getFullYear();
+        const month = d.getMonth() + 1;
+        const day = d.getDate();
 
-        navigation.navigate("WeightChartWeek", { nam, thang, ngay, scaleId })
+        navigation.navigate("GeneralWeightDetail", {  "scaleId": scaleId, "day": day, "month": month, "year": year})
     }
 
     if (count === null) {
@@ -128,60 +127,30 @@ export default ChartBar = ({ route, navigation }) => {
             <View style={{ backgroundColor: 'white' }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
                     <TouchableOpacity style={[styles.TagWeek, , selectedOption === 'option1' && styles.selectedItem]} onPress={() => handleOptionSelect('option1')}>
-                        <Text style={{ textAlign: 'center', fontSize: 15 }}>Tuần hiện tại</Text>
+                        <Text style={{ textAlign: 'center', fontSize: 13 }}>Tuần hiện tại</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={[styles.TagWeek, , selectedOption === 'option2' && styles.selectedItem]} onPress={() => handleOptionSelect('option2')}>
-                        <Text style={{ textAlign: 'center', fontSize: 15 }}>1 tuần trước</Text>
+                        <Text style={{ textAlign: 'center', fontSize: 13 }}>1 tuần trước</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={[styles.TagWeek, , selectedOption === 'option3' && styles.selectedItem]} onPress={() => handleOptionSelect('option3')}>
-                        <Text style={{ textAlign: 'center', fontSize: 15 }}>2 tuần trước</Text>
+                        <Text style={{ textAlign: 'center', fontSize: 13 }}>2 tuần trước</Text>
                     </TouchableOpacity>
                 </View>
 
                 {data === null ? <ActivityIndicator /> : <>
-                    {data.map((d, index) => (
-                        <View style={{ marginTop: 10, marginBottom: 5 }} key={d.ngay}>
-                            <TouchableOpacity style={styles.ItemWeek} onPress={() => goToWeightDetail(d.ngay)}>
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                                    <Text style={{ fontSize: 17, fontWeight: '700' }}>{daysOfWeek[index]}</Text>
-                                    <Text style={{ fontSize: 18, fontWeight: '800', color: '#006600' }}>{moment(d.ngay, 'YYYY-MM-DD').format('DD/MM/YYYY')}</Text>
-                                </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-start', marginVertical: 10, flexWrap: 'wrap', marginLeft: 5 }} >
+                        {data.map((d, index) => (
+                            <TouchableOpacity key={d.ngay} style={styles.ItemWeek} onPress={() => goToWeightDetail(d.ngay)}>
+                                <Text style={styles.textDay}>{daysOfWeek[index]}</Text>
+                                <Text style={styles.textDate}>{moment(d.ngay, 'YYYY-MM-DD').format('DD/MM/YYYY')}</Text>
 
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                                    <Text style={{ fontSize: 15 }}>Tổng số phiếu cân:</Text>
-                                    <Text style={{ fontSize: 18, fontWeight: '800', color: 'red' }}>{d.count}</Text>
-                                </View>
-
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                                    <Text style={{ fontSize: 15 }}>Tổng trọng lượng hàng:</Text>
-                                    <Text style={{ fontSize: 18, fontWeight: '800', color: '#006600' }}>{formatCurrency(d.total_weight)}</Text>
-                                </View>
+                                <Text style={{ fontSize: 13, fontWeight: '800', color: 'red', textAlign: 'center' }}>{d.count} phiếu</Text>
+                                <Text style={{ fontSize: 13, fontWeight: '800', color: '#006600', textAlign: 'center', marginTop: 3 }}>{formatCurrency(d.total_weight)}</Text>
                             </TouchableOpacity>
-
-                            <LinearGradient
-                                colors={['#00FF7F', '#008000']}
-                                start={[0, 0]}
-                                end={[0, 1]}
-                                style={{
-                                    padding: 5,
-                                    width: '3%',
-                                    borderTopLeftRadius: 10,
-                                    borderBottomLeftRadius: 10,
-                                    marginLeft: 15,
-                                    height: 95,
-                                    position: 'absolute',
-                                    zIndex: 99,
-                                    top: 0,
-                                    bottom: 0,
-                                    left: 2
-                                }}
-                            >
-                                <View></View>
-                            </LinearGradient>
-                        </View>
-                    ))}
+                        ))}
+                    </View>
                 </>}
             </View>
         </ScrollView>
@@ -191,14 +160,10 @@ export default ChartBar = ({ route, navigation }) => {
 const styles = StyleSheet.create({
     ItemWeek: {
         backgroundColor: 'white',
-        position: 'relative',
-        height: 95,
-        width: '90%',
-        paddingTop: 8,
-        paddingRight: 30,
-        paddingBottom: 8,
-        paddingLeft: 30,
-        marginLeft: '5%',
+        height: 100,
+        width: '30%',
+        marginVertical: 5,
+        marginHorizontal: 5,
         borderRadius: 10,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
@@ -210,7 +175,7 @@ const styles = StyleSheet.create({
     TagWeek: {
         backgroundColor: 'white',
         width: '28%',
-        height: 40,
+        height: 35,
         paddingTop: 8,
         borderRadius: 10,
         shadowColor: '#000',
@@ -223,4 +188,24 @@ const styles = StyleSheet.create({
     selectedItem: {
         backgroundColor: 'lightblue',
     },
+
+    textDay: {
+        fontSize: 13,
+        fontWeight: '700',
+        textAlign: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#3CB371',
+        borderTopLeftRadius: 10,
+        borderTopRightRadius: 10,
+        paddingVertical: 2,
+        backgroundColor: '#3CB371'
+    },
+
+    textDate: {
+        fontSize: 13,
+        fontWeight: '600',
+        textAlign: 'center',
+        borderBottomWidth: 1,
+        paddingVertical: 2
+    }
 })
