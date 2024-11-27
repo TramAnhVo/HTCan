@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "CanApp",
+    "slug": "CanApp",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "userInterfaceStyle": "automatic"
+  },
+  "name": "CanApp-Ipad"
+}

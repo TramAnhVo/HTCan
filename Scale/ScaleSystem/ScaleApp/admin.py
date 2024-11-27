@@ -162,7 +162,7 @@ class WeightAdmin(admin.ModelAdmin):
         worksheet.append(['Mã phiếu cân', 'Chứng từ', 'Số xe', 'Ngày vào', 'Ngày ra', 'Giờ vào', 'Giờ ra',
                           'Trọng lượng lần 1', 'Trọng lượng lần 2', 'Trọng lượng thực', 'Loại phiếu',
                           'Mã sản phẩm', 'Tên sản phẩm', 'Mã khách hàng', 'Tên khách hàng', 'Ngày tạo phiếu',
-                          'Ghi chú'])
+                          'Tên cân','Ghi chú',])
 
         # Định nghĩa múi giờ Việt Nam
         vietnam_tz = pytz.timezone('Asia/Ho_Chi_Minh')
@@ -179,10 +179,14 @@ class WeightAdmin(admin.ModelAdmin):
                 obj.date_time = pytz.utc.localize(obj.date_time)  # Giả sử nó là UTC
             date_time_vn = obj.date_time.astimezone(vietnam_tz).strftime('%d-%m-%Y %H:%M:%S')
 
+            # Thực hiện truy vấn để lấy thông tin tên cân từ idCan
+            can_id = obj.CanId
+            scale_name = can_id.ScaleName if can_id else ''  # Đảm bảo xử lý trường hợp obj.CanId không tồn tại
+
             worksheet.append([obj.Ticketnum, obj.Docnum, obj.Truckno, date_in, date_out,
                               time_in, time_out, obj.Firstweight,
                               obj.Secondweight, obj.Netweight, obj.Trantype, obj.ProdCode, obj.ProdName, obj.CustCode,
-                              obj.CustName, date_time_vn, obj.Note])
+                              obj.CustName, date_time_vn, scale_name, obj.Note])
 
         # Tạo file Excel và trả về response
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')

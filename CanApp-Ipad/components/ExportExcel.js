@@ -58,7 +58,6 @@ const ExportXLSXDirectly = () => {
     const [toDate, setToDate] = useState(new Date());
 
     const [weightDate, setWeightDate] = useState(null)
-    const [weightAll, setWeightAll] = useState(null)
     const yearFrom = fromDate.getFullYear();
     const monthFrom = fromDate.getMonth() + 1;
     const dayFrom = fromDate.getDate();
@@ -67,7 +66,6 @@ const ExportXLSXDirectly = () => {
     const monthTo = toDate.getMonth() + 1;
     const dayTo = toDate.getDate();
 
-    // thong tin can 
     const loadScales = async () => {
         try {
             let res = await Api.get(endpoints['scale'](user.id));
@@ -80,13 +78,7 @@ const ExportXLSXDirectly = () => {
                     ScaleName: item.ScaleName,
                     id: item.id
                 }));
-
-                const dataWithAll = [
-                    { id: 0, ScaleName: 'Tất cả' },
-                    ...options,
-                ];
-                setData(dataWithAll);
-                // setData(options);
+                setData(options);
             }
         } catch (ex) {
             console.error(ex);
@@ -100,7 +92,6 @@ const ExportXLSXDirectly = () => {
                 try {
                     let res = await Api.get(endpoints['SreachFromDate'](yearFrom, monthFrom, dayFrom, yearTo, monthTo, dayTo, value));
                     setWeightDate(res.data);
-                    // console.log(res.data)
                 } catch (ex) {
                     console.error(ex);
                 }
@@ -110,6 +101,7 @@ const ExportXLSXDirectly = () => {
         loadScales();
         loadWeightFromDate();
     }, [yearFrom, monthFrom, dayFrom, yearTo, monthTo, dayTo, value])
+
 
     // tim kiem theo thang 
     useEffect(() => {
@@ -145,52 +137,6 @@ const ExportXLSXDirectly = () => {
         loadWeightYear();
     }, [valueYear, value])
 
-    // dung tim kiem tat ca cac phieu can tren tat ca can
-    useEffect(() => {
-        const loadDataAll = async () => {
-            if (value === 0) {
-                try {
-                    let res = await Api.get(endpoints['weights']);
-                    setWeightAll(res.data)
-                } catch (ex) {
-                    console.error(ex);
-                }
-            }
-        }
-
-        loadDataAll();
-    }, [value])
-
-    // loc du lieu theo ngay ( truong hop phieu can cua tat ca cac can )
-    const filterDataByDateRange = (data) => {
-        return data.filter(item => {
-            const itemDate = new Date(item.Date_in);
-            const startDate = new Date(`${yearFrom}-${monthFrom}-${dayFrom}`);
-            const endDate = new Date(`${yearTo}-${monthTo}-${dayTo}`);
-            return itemDate >= startDate && itemDate <= endDate;
-        });
-    };
-
-    // loc du lieu theo thang ( truong hop phieu can cua tat ca cac can )
-    const filterDataByMonth = (data) => {
-        const currentYear = new Date().getFullYear();
-        const filteredData = data.filter(item => {
-            const itemDate = new Date(item.Date_in);
-            return itemDate.getFullYear() === currentYear && itemDate.getMonth() === valueMonth - 1;
-        });
-        return filteredData;
-    };
-
-    // loc du lieu theo nam ( truong hop phieu can cua tat ca cac can ) => chua xong
-    const filterDataByYear = (data) => {
-        const filteredData = data.filter(item => {
-            const itemDate = new Date(item.Date_in);
-            return itemDate.getFullYear() === parseInt(valueYear);
-        });
-
-        return filteredData;
-    };
-
     // Hàm để chuyển đổi định dạng giờ về giờ Việt Nam
     const formatDateToVN = (dateString) => {
         const date = new Date(dateString);
@@ -208,17 +154,10 @@ const ExportXLSXDirectly = () => {
         return timeString.split('.')[0]; // Lấy phần trước dấu '.'
     };
 
-    // Hàm để mã hóa tên cân dựa trên CanId
-    const encodeScaleName = (canId) => {
-        const scale = data.find(scale => scale.id === canId);
-        return scale ? scale.ScaleName : "Không tìm thấy cân";
-    };
-
     // xuat file excel
     const exportToXLSX = async (dataWeight) => {
         try {
-            const formattedData = dataWeight.map((item, index) => {
-                const scaleName = (value === 0) ? encodeScaleName(item.CanId) : item.CanId.ScaleName;
+            const formattedData = dataWeight.map(item => {
                 return {
                     Ticketnum: item.Ticketnum,
                     Docnum: item.Docnum,
@@ -226,8 +165,6 @@ const ExportXLSXDirectly = () => {
 
                     Date_in: formatDate(item.Date_in),
                     Date_out: formatDate(item.Date_out),
-                    time_in: formatTime(item.time_in),
-                    time_out: formatTime(item.time_out),
 
                     Firstweight: item.Firstweight,
                     Secondweight: item.Secondweight,
@@ -239,8 +176,9 @@ const ExportXLSXDirectly = () => {
                     CustCode: item.CustCode,
                     CustName: item.CustName,
 
+                    time_in: formatTime(item.time_in),
+                    time_out: formatTime(item.time_out),
                     date_time: new Date(item.date_time).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
-                    ScaleName: scaleName,
                     note: item.Note,
                 };
             });
@@ -252,25 +190,23 @@ const ExportXLSXDirectly = () => {
             ws['A1'] = { v: 'Mã phiếu cân', t: 's' };
             ws['B1'] = { v: 'Chứng từ', t: 's' };
             ws['C1'] = { v: 'Số xe', t: 's' };
-
             ws['D1'] = { v: 'Ngày xe vào', t: 's' };
             ws['E1'] = { v: 'Ngày xe ra', t: 's' };
-            ws['F1'] = { v: 'Giờ xe vào', t: 's' };
-            ws['G1'] = { v: 'Giờ xe ra', t: 's' };
 
-            ws['H1'] = { v: 'Trọng lượng lần 1', t: 's' };
-            ws['I1'] = { v: 'Trọng lượng lần 2', t: 's' };
-            ws['J1'] = { v: 'Trọng lượng thực', t: 's' };
+            ws['F1'] = { v: 'Trọng lượng lần 1', t: 's' };
+            ws['G1'] = { v: 'Trọng lượng lần 2', t: 's' };
+            ws['H1'] = { v: 'Trọng lượng thực', t: 's' };
 
-            ws['K1'] = { v: 'Loại phiếu', t: 's' };
-            ws['L1'] = { v: 'Mã hàng hóa', t: 's' };
-            ws['M1'] = { v: 'Tên hàng hóa', t: 's' };
-            ws['N1'] = { v: 'Mã khách hàng', t: 's' };
-            ws['O1'] = { v: 'Tên khách hàng', t: 's' };
+            ws['I1'] = { v: 'Loại phiếu', t: 's' };
+            ws['J1'] = { v: 'Mã hàng hóa', t: 's' };
+            ws['K1'] = { v: 'Tên hàng hóa', t: 's' };
+            ws['L1'] = { v: 'Mã khách hàng', t: 's' };
+            ws['M1'] = { v: 'Tên khách hàng', t: 's' };
 
+            ws['N1'] = { v: 'Giờ xe vào', t: 's' };
+            ws['O1'] = { v: 'Giờ xe ra', t: 's' };
             ws['P1'] = { v: 'Ngày giờ tạo phiếu', t: 's' };
-            ws['Q1'] = { v: 'Tên cân', t: 's' };
-            ws['R1'] = { v: 'Ghi chú', t: 's' };
+            ws['Q1'] = { v: 'Ghi chú', t: 's' };
 
             XLSX.utils.book_append_sheet(wb, ws, "dataWeight", true);
             const base64 = XLSX.write(wb, { type: "base64" });
@@ -337,13 +273,7 @@ const ExportXLSXDirectly = () => {
                         setErrorMessageMonth('Bạn phải chọn tháng !!')
                     }
                     else {
-                        if (value === 0) {
-                            const dataWeightMonth = filterDataByMonth(weightAll)
-                            exportToXLSX(dataWeightMonth)
-                        }
-                        else {
-                            exportToXLSX(weightMonth)
-                        }
+                        exportToXLSX(weightMonth)
                     }
                 }
             }
@@ -363,17 +293,8 @@ const ExportXLSXDirectly = () => {
                             setErrorMessageYear('Bạn phải nhập năm !!')
                         }
                         else {
-                            if (isValidInput(valueYear) == true) {
-                                if (value === 0) {
-                                    const dataWeightYear = filterDataByYear(weightAll)
-                                    exportToXLSX(dataWeightYear)
-                                }
-                                else {
-                                    exportToXLSX(weightYear)
-                                }
-                            }
-                            else {
-                                setErrorMessageYear('Định dạng năm không đúng !!')
+                            if (value !== null && isValidInput(valueYear) == true) {
+                                exportToXLSX(weightYear)
                             }
                         }
                     }
@@ -385,14 +306,7 @@ const ExportXLSXDirectly = () => {
                         setErrorMessageScale('Bạn phải chọn cân !!')
                     }
                     else {
-                        if (value === 0) {
-                            const dataWeightAll = filterDataByDateRange(weightAll)
-                            exportToXLSX(dataWeightAll)
-                        }
-                        else {
-                            exportToXLSX(weightDate)
-                        }
-
+                        exportToXLSX(weightDate)
                     }
                 }
                 else {
@@ -477,7 +391,7 @@ const ExportXLSXDirectly = () => {
                     <Text style={{ fontSize: 15, marginLeft: 5, fontWeight: '700', marginRight: 10 }}>Xuất file ngày</Text>
                 </TouchableOpacity>
 
-                <View style={{ marginLeft: '1%', width: '40%' }}>
+                <View style={{ marginLeft: '2%', width: '40%' }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
                         <View style={{ flexDirection: 'row', marginRight: 10, alignItems: 'center' }}>
                             <Text style={{ marginRight: 11 }}>Từ: </Text>

@@ -84,7 +84,7 @@ class WeightView(viewsets.ViewSet,
         ticket_num = request.data.get('Ticketnum')
 
         if ticket_num is None:
-            return Response({"error": "Mã phiếu không được cung cấp."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Mã phiếu bị rỗng!"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Kiểm tra xem phiếu cân đã tồn tại chưa
         ticket, created = Weight.objects.get_or_create(Ticketnum=ticket_num)
@@ -131,6 +131,7 @@ class WeightView(viewsets.ViewSet,
                 "time_in": weight.time_in,
                 "time_out": weight.time_out,
                 "date_time": weight.date_time,
+                "CanId": weight.CanId,
                 "Note": weight.Note
             })
 
@@ -184,6 +185,10 @@ class WeightView(viewsets.ViewSet,
                 "time_in": weight.time_in,
                 "time_out": weight.time_out,
                 "date_time": weight.date_time,
+                "CanId": {
+                    "id": weight.CanId.id,
+                    "ScaleName": weight.CanId.ScaleName
+                },
                 "Note": weight.Note
             }
             data.append(weight_data)
@@ -218,6 +223,10 @@ class WeightView(viewsets.ViewSet,
                 "time_in": weight.time_in,
                 "time_out": weight.time_out,
                 "date_time": weight.date_time,
+                "CanId": {
+                    "id": weight.CanId.id,
+                    "ScaleName": weight.CanId.ScaleName
+                },
                 "Note": weight.Note
             }
             data.append(weight_data)
@@ -315,6 +324,10 @@ class WeightView(viewsets.ViewSet,
                 "time_in": weight.time_in,
                 "time_out": weight.time_out,
                 "date_time": weight.date_time,
+                "CanId": {
+                    "id": weight.CanId.id,
+                    "ScaleName": weight.CanId.ScaleName
+                },
                 "Note": weight.Note
             }
             data.append(weight_data)
@@ -335,17 +348,15 @@ class WeightView(viewsets.ViewSet,
                                                 CanId_id=canId,Trantype='Nhập hàng').aggregate(
             count_in_weight=Count('Ticketnum'))['count_in_weight']
 
-        total_in = Weight.objects.filter(date_time__year=current_year, date_time__month=month,
-                                         CanId_id=canId, Trantype='Nhập hàng').aggregate(total_in=Sum('Netweight'))[
-            'total_in']
+        total_in = Weight.objects.filter(date_time__year=current_year, date_time__month=month,CanId_id=canId,
+                                         Trantype='Nhập hàng').aggregate(total_in=Sum('Netweight'))['total_in']
 
         count_out_weight = Weight.objects.filter(date_time__year=current_year, date_time__month=month,
                                                 CanId_id=canId, Trantype='Xuất hàng').aggregate(
             count_out_weight=Count('Ticketnum'))['count_out_weight']
 
-        total_out = Weight.objects.filter(date_time__year=current_year, date_time__month=month,
-                                          CanId_id=canId, Trantype='Xuất hàng').aggregate(total_out=Sum('Netweight'))[
-            'total_out']
+        total_out = Weight.objects.filter(date_time__year=current_year, date_time__month=month,CanId_id=canId,
+                                          Trantype='Xuất hàng').aggregate(total_out=Sum('Netweight'))['total_out']
 
         report_data = {
             "Month": month,
@@ -603,6 +614,7 @@ class WeightView(viewsets.ViewSet,
 
         return JsonResponse(report_data)
 
+    # bao cao thong ke tu ngay den ngay
     def general_from_date(self, request, yearFrom, monthFrom, dayFrom, yearTo, monthTo, dayTo, canId):
         data = []
         start_of_week = datetime(yearFrom, monthFrom, dayFrom)
@@ -853,7 +865,7 @@ class WeightView(viewsets.ViewSet,
 
         return JsonResponse(report_data)
 
-    # tim cac phieu can theo ma khach hang
+    # tim kiem phieu can theo ma khach hang
     def get_customer_weight(self, request, custCode, year, month, day, canId ):
         date_weight = datetime(year, month, day).date()
         try:
@@ -877,8 +889,7 @@ class WeightView(viewsets.ViewSet,
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
 
-        # tim cac phieu can theo ma khach hang
-
+    # tim kiem phieu can theo ma hang hoa
     def get_product_weight(self, request, prodCode, year, month, day, canId):
         date_weight = datetime(year, month, day).date()
         try:
