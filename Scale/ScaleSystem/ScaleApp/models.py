@@ -38,8 +38,8 @@ class Weight(models.Model):
     Docnum = models.CharField(null=False, max_length=30)
     Truckno = models.CharField(max_length=15, null=False)
 
-    Date_in = models.DateField(auto_now_add=True, null=False)
-    Date_out = models.DateField(auto_now=True, null=False)
+    Date_in = models.DateField(auto_now_add=False, null=False)
+    Date_out = models.DateField(auto_now=False, null=False)
 
     Firstweight = models.IntegerField(null=False, default=0)
     Secondweight = models.IntegerField(null=False, default=0)
@@ -51,11 +51,12 @@ class Weight(models.Model):
     ProdCode = models.CharField(max_length=20, null=True)
     CustCode = models.CharField(max_length=20, null=True)
 
-    time_in = models.TimeField(auto_now_add=True)
-    time_out = models.TimeField(auto_now=True)
+    time_in = models.TimeField(auto_now_add=False)
+    time_out = models.TimeField(auto_now=False)
     date_time = models.DateTimeField(null=True, auto_now_add=True)
 
     CanId = models.ForeignKey(Scale, on_delete=models.CASCADE, null=True)
+    TenCan = models.CharField(max_length=255, null=True)
     Note = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
@@ -65,13 +66,12 @@ class Weight(models.Model):
         ordering = ['-id']
 
     def save(self, *args, **kwargs):
-        # self.Netweight = abs(self.Firstweight - self.Secondweight)
-        # Kiểm tra nếu Firstweight và Secondweight có giá trị
         if self.Firstweight is not None and self.Secondweight is not None:
             self.Netweight = abs(self.Firstweight - self.Secondweight)
         else:
             self.Netweight = 0  # Hoặc giá trị mặc định nào đó
         super().save(*args, **kwargs)
+
 
 
 class Image(models.Model):

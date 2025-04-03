@@ -141,6 +141,7 @@ export default GeneralProductDetail = ({ navigation, route }) => {
                     time_in: formatTime(item.time_in),
                     time_out: formatTime(item.time_out),
                     date_time: new Date(item.date_time).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+                    ScaleName: item.TenCan,
                     note: item.Note,
                 };
             });
@@ -168,7 +169,8 @@ export default GeneralProductDetail = ({ navigation, route }) => {
             ws['N1'] = { v: 'Giờ xe vào', t: 's' };
             ws['O1'] = { v: 'Giờ xe ra', t: 's' };
             ws['P1'] = { v: 'Ngày giờ tạo phiếu', t: 's' };
-            ws['Q1'] = { v: 'Ghi chú', t: 's' };
+            ws['Q1'] = { v: 'Tên cân', t:'s'};
+            ws['R1'] = { v: 'Ghi chú', t: 's' };
 
             XLSX.utils.book_append_sheet(wb, ws, "dataPerson", true);
             const base64 = XLSX.write(wb, { type: "base64" });
@@ -345,7 +347,7 @@ export default GeneralProductDetail = ({ navigation, route }) => {
                         <TouchableOpacity style={[styles.ItemSreach, style = { width: '6%' }]} onPress={() => sortWeight(weight)}>
                             <FontAwesome name="sort" size={16} color="black" />
                         </TouchableOpacity>
-
+                        
                         {/* excel */}
                         <TouchableOpacity style={{ width: '8%', marginLeft: 5 }} onPress={exportToXLSX} >
                             <MaterialCommunityIcons name="microsoft-excel" size={27} color="green" />

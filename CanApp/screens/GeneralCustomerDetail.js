@@ -111,10 +111,21 @@ export default GeneralCustomerDetail = ({ navigation, route }) => {
         return `${day}/${month}/${year}`; // Định dạng DD/MM/YYYY
     };
 
+    // const formatDate = (dateString) => {
+    //     if (!dateString) return ''; // Kiểm tra nếu dateString là undefined hoặc null
+    //     const [year, month, day] = dateString.split('-');
+    //     return `${day}/${month}/${year}`; // Định dạng DD/MM/YYYY
+    // };
+
     // Hàm chuyển đổi định dạng giờ
     const formatTime = (timeString) => {
         return timeString.split('.')[0]; // Lấy phần trước dấu '.'
     };
+    
+    // const formatTime = (timeString) => {
+    //     if (!timeString) return ''; // Kiểm tra nếu timeString là undefined hoặc null
+    //     return timeString.split('.')[0]; // Lấy phần trước dấu '.'
+    // };
 
     // xuat ra file excel
     const exportToXLSX = async () => {
@@ -141,6 +152,7 @@ export default GeneralCustomerDetail = ({ navigation, route }) => {
                     time_in: formatTime(item.time_in),
                     time_out: formatTime(item.time_out),
                     date_time: new Date(item.date_time).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+                    ScaleName: item.TenCan,
                     note: item.Note,
                 };
             });
@@ -168,7 +180,8 @@ export default GeneralCustomerDetail = ({ navigation, route }) => {
             ws['N1'] = { v: 'Giờ xe vào', t: 's' };
             ws['O1'] = { v: 'Giờ xe ra', t: 's' };
             ws['P1'] = { v: 'Ngày giờ tạo phiếu', t: 's' };
-            ws['Q1'] = { v: 'Ghi chú', t: 's' };
+            ws['Q1'] = { v: 'Tên cân', t:'s'};
+            ws['R1'] = { v: 'Ghi chú', t: 's' };
 
             XLSX.utils.book_append_sheet(wb, ws, "dataPerson", true);
             const base64 = XLSX.write(wb, { type: "base64" });
@@ -180,7 +193,7 @@ export default GeneralCustomerDetail = ({ navigation, route }) => {
             });
         } catch (error) {
             console.error('Lỗi khi xuất file:', error);
-            Alert.alert('Lỗi khi xuất file:', error.message);
+            // Alert.alert('Lỗi khi xuất file:', error.message);
         }
     }
 

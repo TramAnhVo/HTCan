@@ -8,13 +8,13 @@ export default WeightDetail = ({ route }) => {
     const [weight, setWeight] = useState(null)
     const [refreshing, setRefreshing] = useState(false);
     const { weightId } = route.params;
-    const [scale, setScale] = useState(null)
+    // const [scale, setScale] = useState(null)
 
     const loadWeightDetail = async () => {
         try {
             let res = await Api.get(endpoints['weight'](weightId));
             setWeight(res.data)
-            loadScale(res.data.CanId);
+            // loadScale(res.data.CanId);
         } catch (ex) {
             console.error(ex);
         } finally {
@@ -22,14 +22,14 @@ export default WeightDetail = ({ route }) => {
         }
     }
 
-    const loadScale = async (canId) => {
-        try {
-            let scales = await Api.get(endpoints['scales'](canId))
-            setScale(scales.data)
-        } catch (ex) {
-            console.error(ex);
-        }
-    }
+    // const loadScale = async (canId) => {
+    //     try {
+    //         let scales = await Api.get(endpoints['scales'](canId))
+    //         setScale(scales.data)
+    //     } catch (ex) {
+    //         console.error(ex);
+    //     }
+    // }
 
     useEffect(() => {
         loadWeightDetail();
@@ -89,13 +89,11 @@ export default WeightDetail = ({ route }) => {
                         <Text style={{ fontSize: 14, fontWeight: '700', marginLeft: 10, borderBottomWidth: 1, width: '60%', borderBottomColor: '#777777' }}>{weight.Trantype}</Text>
                     </View>
 
-                    {scale === null ? <ActivityIndicator /> : <>
-                        <View style={{ flexDirection: 'row', marginTop: 7, alignItems: 'center' }}>
-                            <FontAwesome6 name="weight-scale" size={18} color="black" />
-                            <Text style={{ fontSize: 14, marginLeft: 5 }}>Cân:</Text>
-                            <Text style={{ fontSize: 14, fontWeight: '700', marginLeft: 10, borderBottomWidth: 1, width: '73%', borderBottomColor: '#777777' }}>{scale.ScaleName}</Text>
-                        </View>
-                    </>}
+                    <View style={{ flexDirection: 'row', marginTop: 7, alignItems: 'center' }}>
+                        <FontAwesome6 name="weight-scale" size={18} color="black" />
+                        <Text style={{ fontSize: 14, marginLeft: 5 }}>Cân:</Text>
+                        <Text style={{ fontSize: 14, fontWeight: '700', marginLeft: 10, borderBottomWidth: 1, width: '73%', borderBottomColor: '#777777' }}>{weight.TenCan}</Text>
+                    </View>
 
                     <View style={{ flexDirection: 'row', marginTop: 7, marginBottom: 3, alignItems: 'center' }}>
                         <MaterialIcons name="date-range" size={24} color="black" />

@@ -25,11 +25,11 @@ admin_site = CanDienTuAdmin(name='myapp')
 
 class UserAdmin(admin.ModelAdmin):
     search_fields = ['username']
-    list_display = ['username', 'first_name',  'company','phone', 'NgayTao', 'is_active', 'is_staff', 'state']
+    list_display = ['username', 'First_name',  'company','phone', 'Created_Date', 'is_active', 'is_staff', 'state']
     actions = ['activate_selected_accounts', 'lock_selected_accounts']
     list_per_page = 20
 
-    def NgayTao(self, obj):
+    def Created_Date(self, obj):
         vn_tz = timezone('Asia/Ho_Chi_Minh')
         vn_time = localtime(obj.date_joined).astimezone(vn_tz)
         return vn_time.strftime('%d-%m-%Y %H:%M:%S')
@@ -55,6 +55,15 @@ class UserAdmin(admin.ModelAdmin):
             user.save()
         return user
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.filter(is_superuser=False)
+        return qs
+
+    def First_name(self, obj):
+        return obj.first_name
+    First_name.short_description = 'Name'
+
 
 class WeightUserFilter(admin.SimpleListFilter):
     title = _('User')  # Tiêu đề của bộ lọc
@@ -72,7 +81,7 @@ class WeightUserFilter(admin.SimpleListFilter):
 
 class WeightAdmin(admin.ModelAdmin):
     list_display = ['Ticketnum', 'Truckno', 'DateIn', 'DateOut', 'ProdName', 'CustName', 'Firstweight',
-                    'Secondweight', 'Netweight', 'Trantype', 'TimeIn', 'TimeOut', 'CanId' ]
+                    'Secondweight', 'Netweight', 'Trantype', 'TimeIn', 'TimeOut', 'CanId', 'NgayTao' ]
     list_filter = ['date_time', 'Trantype']
     search_fields = ['ProdName', 'CustName']
     readonly_fields = ['Netweight', 'DateIn', 'DateOut', 'TimeIn', 'TimeOut', 'NgayTao']
@@ -216,14 +225,39 @@ class WeightAdmin(admin.ModelAdmin):
             return time_out_aware.strftime('%H:%M:%S')
 
 
+class ScaleForm(forms.ModelForm):
+    UserName = forms.ModelChoiceField(queryset=User.objects.filter(is_superuser=False), empty_label=None)
+
+    class Meta:
+        model = Scale
+        fields = ['ScaleName', 'State', 'UserName']  # Các trường bạn muốn hiển thị trên form
+
+    def save(self, commit=True):
+        scale = super(ScaleForm, self).save(commit=False)
+        user_instance = self.cleaned_data.get('UserName')
+        scale.UserId = user_instance
+
+        if commit:
+            scale.save()
+
+        return scale
+
+
 class ScaleAdmin(admin.ModelAdmin):
-    list_display = ['id','ScaleName', 'Created_Date', 'UserId', 'State']
+    form = ScaleForm
+    list_display = ['ScaleName', 'Created_Date', 'user_id', 'State']
     list_filter = ['CreatDay']
 
     def Created_Date(self, obj):
         vn_tz = timezone('Asia/Ho_Chi_Minh')
         vn_time = localtime(obj.CreatDay).astimezone(vn_tz)
         return vn_time.strftime('%d-%m-%Y %H:%M:%S')
+
+    def user_id(self, obj):
+        return obj.UserId  # Đổi tên trường UserId thành user_id
+
+
+    user_id.short_description = 'Username'  # Đặt tên hiển thị mới cho trường UserId
 
 
 class ImageAdminForm(forms.ModelForm):

@@ -36,15 +36,15 @@ export default GeneralDate = ({ route }) => {
                 <View style={{ flex: 1 }}>
                     <View style={styles.barTime}>
                         <View style={{ flexDirection: 'row' }}>
-                            <Text style={{ fontSize: 15, fontWeight: '700', color: 'white' }}>Từ ngày </Text>
-                            <Text style={{ fontSize: 15, fontWeight: '700', color: 'white' }}>{formatDate(dayFrom, monthFrom, yearFrom)} </Text>
+                            <Text style={{ fontSize: 14, fontWeight: '700', color: 'white' }}>Từ ngày </Text>
+                            <Text style={{ fontSize: 14, fontWeight: '700', color: 'white' }}>{formatDate(dayFrom, monthFrom, yearFrom)} </Text>
                         </View>
 
-                        <AntDesign name="arrowright" size={20} color="white" />
+                        <AntDesign name="arrowright" size={18} color="white" />
 
                         <View style={{ flexDirection: 'row' }}>
-                            <Text style={{ fontSize: 15, fontWeight: '700', color: 'white' }}>Đến ngày </Text>
-                            <Text style={{ fontSize: 15, fontWeight: '700', color: 'white' }}>{formatDate(dayTo, monthTo, yearTo)} </Text>
+                            <Text style={{ fontSize: 14, fontWeight: '700', color: 'white' }}>Đến ngày </Text>
+                            <Text style={{ fontSize: 14, fontWeight: '700', color: 'white' }}>{formatDate(dayTo, monthTo, yearTo)} </Text>
                         </View>
                     </View>
 

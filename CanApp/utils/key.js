@@ -1,5 +1,5 @@
-export const CLIENT_ID = 'iq8ikICd0vvKaulFc0TX0KRqlFBPYkeswK9nRyH4';
-export const CLIENT_SECRET = '1n72BIEHVbsoVnLvN39KwDKSt0jUZIKWjf7Cfk1fptRKwT2aJN1WmEigxtSjYK4DWrfdvXslpSURIdurfId2AomTsDFYfiZZN3BNSAn4xjsFibilwTK6GLtTR7F9T6Jw'
+export const CLIENT_ID = 'ICLGXXLwTph7RfYRYDQn18dbkS6ejZ5k4y5Ru0n9';
+export const CLIENT_SECRET = 'RlGhKCWLHFrp7gNDJaUPKrAdpl6mnHzOHyL8kDR1s01XYJWqKJz2f9IBTlYqEl9gj9P0uFoIVFXPdRB4y3OPjpEp6Nzc2b0zDiCmBoCOUGoLyPc5MXk55jNBE7sicBIC'
 
 // export const CLIENT_ID = 'fAeDVdd6kwDHzSfBIZpp4k3s2J4nxvW4ypKye5du';
 // export const CLIENT_SECRET = '6hXMY1n0dEke8cbw7wkusNeYpcuQltqDb39R5QbjJTMozJXl7Ct6StUJNnsEiWvGUw6rWTbfIfp9jYsteXt5ygeTi7oIGbEarQb5h1eEZmLRtwuXEaU5CgwZdNhyUkqG'

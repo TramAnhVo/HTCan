@@ -1,5 +1,6 @@
 from rest_framework import viewsets, permissions, generics, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import JSONParser
 from rest_framework.views import Response
 from django.http import JsonResponse, HttpResponseRedirect
@@ -73,24 +74,34 @@ class UserView(viewsets.ViewSet,
 
 class WeightView(viewsets.ViewSet,
                  generics.CreateAPIView,
+                 generics.UpdateAPIView,
                  # generics.DestroyAPIView,
                  generics.ListAPIView,
                  generics.RetrieveAPIView):
     queryset = Weight.objects.all()
     serializer_class = serializers.WeightSerializer
 
-    # post phieu can ( mới => tạo mới, trùng => update)
     def create(self, request, *args, **kwargs):
         ticket_num = request.data.get('Ticketnum')
+        date_in = request.data.get('Date_in')  # Lấy giá trị ngày tháng từ request
+        date_out = request.data.get('Date_out')
+        tim_in = request.data.get('time_in')
+        tim_out = request.data.get('time_out')
 
-        if ticket_num is None:
+        if not ticket_num:
             return Response({"error": "Mã phiếu bị rỗng!"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Kiểm tra xem phiếu cân đã tồn tại chưa
-        ticket, created = Weight.objects.get_or_create(Ticketnum=ticket_num)
+        # Kiểm tra và tạo mới nếu chưa có, đồng thời thiết lập giá trị mặc định
+        ticket, created = Weight.objects.get_or_create(
+            Ticketnum=ticket_num,
+            defaults={
+                "Date_in": date_in,
+                "Date_out": date_out,
+                "time_in": tim_in,
+                "time_out":tim_out}  # Chỉ thiết lập nếu bản ghi được tạo mới
+        )
 
-        # Cập nhật thông tin nếu đã tồn tại
-        serializer = self.get_serializer(ticket, data=request.data, partial=False)
+        serializer = self.get_serializer(ticket, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
@@ -131,7 +142,7 @@ class WeightView(viewsets.ViewSet,
                 "time_in": weight.time_in,
                 "time_out": weight.time_out,
                 "date_time": weight.date_time,
-                "CanId": weight.CanId,
+                "TenCan": weight.TenCan,
                 "Note": weight.Note
             })
 
@@ -185,19 +196,16 @@ class WeightView(viewsets.ViewSet,
                 "time_in": weight.time_in,
                 "time_out": weight.time_out,
                 "date_time": weight.date_time,
-                "CanId": {
-                    "id": weight.CanId.id,
-                    "ScaleName": weight.CanId.ScaleName
-                },
+                "TenCan": weight.TenCan,
                 "Note": weight.Note
             }
             data.append(weight_data)
 
         return JsonResponse(data, safe=False)
 
-    # thong ke theo nam
+    # thong ke phieu can theo nam
     def weight_detail_year(self, request, year, canId):
-        weight_list = Weight.objects.filter(date_time__year=year,  CanId_id=canId)
+        weight_list = Weight.objects.filter(date_time__year=year, CanId_id=canId)
 
         data = []
         for index, weight in enumerate(weight_list, start=1):
@@ -223,10 +231,7 @@ class WeightView(viewsets.ViewSet,
                 "time_in": weight.time_in,
                 "time_out": weight.time_out,
                 "date_time": weight.date_time,
-                "CanId": {
-                    "id": weight.CanId.id,
-                    "ScaleName": weight.CanId.ScaleName
-                },
+                "TenCan": weight.TenCan,
                 "Note": weight.Note
             }
             data.append(weight_data)
@@ -324,10 +329,7 @@ class WeightView(viewsets.ViewSet,
                 "time_in": weight.time_in,
                 "time_out": weight.time_out,
                 "date_time": weight.date_time,
-                "CanId": {
-                    "id": weight.CanId.id,
-                    "ScaleName": weight.CanId.ScaleName
-                },
+                "TenCan": weight.TenCan,
                 "Note": weight.Note
             }
             data.append(weight_data)
@@ -345,17 +347,17 @@ class WeightView(viewsets.ViewSet,
                 total_weight=Sum('Netweight'))['total_weight']
 
         count_in_weight = Weight.objects.filter(date_time__year=current_year, date_time__month=month,
-                                                CanId_id=canId,Trantype='Nhập hàng').aggregate(
+                                                CanId_id=canId, Trantype='Nhập hàng').aggregate(
             count_in_weight=Count('Ticketnum'))['count_in_weight']
 
-        total_in = Weight.objects.filter(date_time__year=current_year, date_time__month=month,CanId_id=canId,
+        total_in = Weight.objects.filter(date_time__year=current_year, date_time__month=month, CanId_id=canId,
                                          Trantype='Nhập hàng').aggregate(total_in=Sum('Netweight'))['total_in']
 
         count_out_weight = Weight.objects.filter(date_time__year=current_year, date_time__month=month,
-                                                CanId_id=canId, Trantype='Xuất hàng').aggregate(
+                                                 CanId_id=canId, Trantype='Xuất hàng').aggregate(
             count_out_weight=Count('Ticketnum'))['count_out_weight']
 
-        total_out = Weight.objects.filter(date_time__year=current_year, date_time__month=month,CanId_id=canId,
+        total_out = Weight.objects.filter(date_time__year=current_year, date_time__month=month, CanId_id=canId,
                                           Trantype='Xuất hàng').aggregate(total_out=Sum('Netweight'))['total_out']
 
         report_data = {
@@ -409,9 +411,9 @@ class WeightView(viewsets.ViewSet,
                                                       Trantype='Xuất hàng').aggregate(count_out_day=Count("*"))
 
                 total_in = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId,
-                                                  Trantype='Nhập hàng').aggregate(total_in=Sum("Netweight"))
+                                                 Trantype='Nhập hàng').aggregate(total_in=Sum("Netweight"))
                 total_out = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId,
-                                                 Trantype='Xuất hàng').aggregate(total_out=Sum("Netweight"))
+                                                  Trantype='Xuất hàng').aggregate(total_out=Sum("Netweight"))
 
                 current_day = {
                     "code": date.strftime('%Y-%m-%d'),
@@ -488,18 +490,23 @@ class WeightView(viewsets.ViewSet,
 
         count_weight = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
                                              CanId_id=canId).aggregate(count_weight=Count('Ticketnum'))['count_weight']
+
         total_weight = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
                                              CanId_id=canId).aggregate(total_weight=Sum('Netweight'))['total_weight']
 
         count_out = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
-                                          CanId_id=canId, Trantype='Xuất hàng').aggregate(count_out=Count('Ticketnum'))['count_out']
+                                          CanId_id=canId, Trantype='Xuất hàng').aggregate(count_out=Count('Ticketnum'))[
+            'count_out']
         total_out = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
-                                          CanId_id=canId, Trantype='Xuất hàng').aggregate(total_out=Sum('Netweight'))['total_out']
+                                          CanId_id=canId, Trantype='Xuất hàng').aggregate(total_out=Sum('Netweight'))[
+            'total_out']
 
         count_in = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
-                                         CanId_id=canId, Trantype='Nhập hàng').aggregate(count_in=Count('Ticketnum'))['count_in']
+                                         CanId_id=canId, Trantype='Nhập hàng').aggregate(count_in=Count('Ticketnum'))[
+            'count_in']
         total_in = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
-                                         CanId_id=canId, Trantype='Nhập hàng').aggregate(total_in=Sum('Netweight'))['total_in']
+                                         CanId_id=canId, Trantype='Nhập hàng').aggregate(total_in=Sum('Netweight'))[
+            'total_in']
 
         report_data = {
             "from": start_of_week.date(),
@@ -509,11 +516,12 @@ class WeightView(viewsets.ViewSet,
             "count_out": count_out,
             'total_out': total_out,
             "count_in": count_in,
-            "total_in":total_in,
+            "total_in": total_in,
             "days": []
         }
 
-        weights = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),CanId_id=canId) \
+        weights = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
+                                        CanId_id=canId) \
             .values(
             "Date_in",
             "CustCode",
@@ -547,13 +555,15 @@ class WeightView(viewsets.ViewSet,
 
                 total_records_day = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId).aggregate(
                     total_records_day=Count("*"))
+
                 total_weight_day = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId).aggregate(
                     total_weight_day=Sum("Netweight"))
 
                 count_in_day = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId,
                                                      Trantype='Nhập hàng').aggregate(count_in_day=Count("*"))
+
                 count_out_day = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId,
-                                                     Trantype='Xuất hàng').aggregate(count_out_day=Count("*"))
+                                                      Trantype='Xuất hàng').aggregate(count_out_day=Count("*"))
 
                 current_day = {
                     "Date": date.strftime('%Y-%m-%d'),
@@ -622,6 +632,7 @@ class WeightView(viewsets.ViewSet,
 
         count_weight = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
                                              CanId_id=canId).aggregate(count_weight=Count('Ticketnum'))['count_weight']
+
         total_weight = Weight.objects.filter(Date_in__gte=start_of_week.date(), Date_in__lte=end_of_week.date(),
                                              CanId_id=canId).aggregate(total_weight=Sum('Netweight'))['total_weight']
 
@@ -686,11 +697,13 @@ class WeightView(viewsets.ViewSet,
 
                 total_records_day = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId).aggregate(
                     total_records_day=Count("*"))
+
                 total_weight_day = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId).aggregate(
                     total_weight_day=Sum("Netweight"))
 
                 count_in_day = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId,
                                                      Trantype='Nhập hàng').aggregate(count_in_day=Count("*"))
+
                 count_out_day = Weight.objects.filter(Date_in=date.strftime('%Y-%m-%d'), CanId_id=canId,
                                                       Trantype='Xuất hàng').aggregate(count_out_day=Count("*"))
 
@@ -757,24 +770,31 @@ class WeightView(viewsets.ViewSet,
 
         return JsonResponse(report_data)
 
-    # bao cao thong ke theo ngay (nhom khach hang => nhom san pham)
+    # bao cao thong ke theo ngay (sap xep theo tu nhom khach hang => nhom san pham)
     def general_day(self, request, year, month, day, canId):
         date_weight = datetime(year, month, day).date()
 
         count_weight = Weight.objects.filter(date_time__date=date_weight, CanId_id=canId).aggregate(
-                                            count_weight=Count('Ticketnum'))['count_weight']
-        total_weight = Weight.objects.filter(date_time__date=date_weight,CanId_id=canId).aggregate(
-                                            total_weight=Sum('Netweight'))['total_weight']
+            count_weight=Count('Ticketnum'))['count_weight']
 
-        count_weight_out = Weight.objects.filter(date_time__date=date_weight,CanId_id=canId, Trantype='Xuất hàng').aggregate(
-                                        count_weight_out=Count('Ticketnum'))['count_weight_out']
-        total_weight_out = Weight.objects.filter(date_time__date=date_weight,CanId_id=canId, Trantype='Xuất hàng').aggregate(
-                                        total_weight_out=Sum('Netweight'))['total_weight_out']
+        total_weight = Weight.objects.filter(date_time__date=date_weight, CanId_id=canId).aggregate(
+            total_weight=Sum('Netweight'))['total_weight']
 
-        count_weight_in = Weight.objects.filter(date_time__date=date_weight,CanId_id=canId, Trantype='Nhập hàng').aggregate(
-                                        count_weight_in=Count('Ticketnum'))['count_weight_in']
-        total_weight_in = Weight.objects.filter(date_time__date=date_weight,CanId_id=canId, Trantype='Nhập hàng').aggregate(
-                                        total_weight_in=Sum('Netweight'))['total_weight_in']
+        count_weight_out = \
+        Weight.objects.filter(date_time__date=date_weight, CanId_id=canId, Trantype='Xuất hàng').aggregate(
+            count_weight_out=Count('Ticketnum'))['count_weight_out']
+
+        total_weight_out = \
+        Weight.objects.filter(date_time__date=date_weight, CanId_id=canId, Trantype='Xuất hàng').aggregate(
+            total_weight_out=Sum('Netweight'))['total_weight_out']
+
+        count_weight_in = \
+        Weight.objects.filter(date_time__date=date_weight, CanId_id=canId, Trantype='Nhập hàng').aggregate(
+            count_weight_in=Count('Ticketnum'))['count_weight_in']
+
+        total_weight_in = \
+        Weight.objects.filter(date_time__date=date_weight, CanId_id=canId, Trantype='Nhập hàng').aggregate(
+            total_weight_in=Sum('Netweight'))['total_weight_in']
 
         weights = Weight.objects.filter(date_time__date=date_weight, CanId_id=canId).values(
             "CustCode",
@@ -866,7 +886,7 @@ class WeightView(viewsets.ViewSet,
         return JsonResponse(report_data)
 
     # tim kiem phieu can theo ma khach hang
-    def get_customer_weight(self, request, custCode, year, month, day, canId ):
+    def get_customer_weight(self, request, custCode, year, month, day, canId):
         date_weight = datetime(year, month, day).date()
         try:
             weight_tickets = Weight.objects.filter(date_time__date=date_weight, CanId_id=canId, CustCode=custCode)
@@ -875,13 +895,26 @@ class WeightView(viewsets.ViewSet,
                     'STT': index + 1,
                     "id": ticket.id,
                     'Ticketnum': ticket.Ticketnum,
+                    "Docnum": ticket.Docnum,
+                    "Truckno": ticket.Truckno,
+                    "Date_in": ticket.Date_in,
+                    "Date_out": ticket.Date_out,
+
+                    "Firstweight": ticket.Firstweight,
+                    "Secondweight": ticket.Secondweight,
                     'Netweight': ticket.Netweight,
+                    "Trantype": ticket.Trantype,
+
                     'CustCode': ticket.CustCode,
                     'CustName': ticket.CustName,
                     'ProdCode': ticket.ProdCode,
                     'ProdName': ticket.ProdName,
-                    'Trantype': ticket.Trantype,
-                    'date_time': ticket.date_time
+
+                    "time_in": ticket.time_in,
+                    "time_out": ticket.time_out,
+                    'date_time': ticket.date_time,
+                    'TenCan': ticket.TenCan,
+                    "Note": ticket.Note,
                 }
                 for index, ticket in enumerate(weight_tickets)
             ]
@@ -899,17 +932,29 @@ class WeightView(viewsets.ViewSet,
                     'STT': index + 1,
                     "id": ticket.id,
                     'Ticketnum': ticket.Ticketnum,
+                    "Docnum": ticket.Docnum,
+                    "Truckno": ticket.Truckno,
+                    "Date_in": ticket.Date_in,
+                    "Date_out": ticket.Date_out,
+
+                    "Firstweight": ticket.Firstweight,
+                    "Secondweight": ticket.Secondweight,
                     'Netweight': ticket.Netweight,
+                    "Trantype": ticket.Trantype,
+
                     'CustCode': ticket.CustCode,
                     'CustName': ticket.CustName,
                     'ProdCode': ticket.ProdCode,
                     'ProdName': ticket.ProdName,
-                    'Trantype': ticket.Trantype,
+
+                    "time_in": ticket.time_in,
+                    "time_out": ticket.time_out,
                     'date_time': ticket.date_time,
+                    'TenCan': ticket.TenCan,
+                    "Note": ticket.Note,
                 }
                 for index, ticket in enumerate(weight_tickets)
             ]
             return JsonResponse(data, safe=False)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
-

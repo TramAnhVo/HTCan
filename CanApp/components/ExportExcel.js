@@ -240,7 +240,8 @@ const ExportXLSXDirectly = () => {
                     CustName: item.CustName,
 
                     date_time: new Date(item.date_time).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
-                    ScaleName: scaleName,
+                    // ScaleName: scaleName,
+                    ScaleName: item.TenCan,
                     note: item.Note,
                 };
             });
@@ -322,6 +323,7 @@ const ExportXLSXDirectly = () => {
         return regex.test(input);
     };
 
+    // ham chon dieu kien va xuat loi 
     const ExportExcel = () => {
         if (selectedOption === 'option1') {
             if (value === null && valueMonth === null) {
@@ -521,7 +523,7 @@ const ExportXLSXDirectly = () => {
                 </View>
             </View>
 
-            {/* combox thang */}
+            {/* combox thang => tìm trong nam*/}
             <View style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: 10, marginTop: 10 }}>
                 <TouchableOpacity onPress={() => handleOptionSelect('option1')}
                     style={{ flexDirection: 'row', alignItems: 'center' }}>
